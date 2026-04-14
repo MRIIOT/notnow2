@@ -30,10 +30,11 @@ router.post('/', authenticate, authorize(), async (req: Request, res: Response, 
 // GET /teams/:teamId/time
 router.get('/', authenticate, authorize(), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { userId, weekOf } = req.query;
+    const { userId, weekOf, taskId } = req.query;
     const filter: Record<string, unknown> = { teamId: req.params.teamId };
 
     if (userId) filter.userId = userId;
+    if (taskId) filter.taskId = taskId;
 
     if (weekOf) {
       const start = new Date(weekOf as string);

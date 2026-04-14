@@ -1,9 +1,13 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTeam } from '@/hooks/useTeam';
+import { useGroups } from '@/hooks/useGroups';
+import { useTasks } from '@/hooks/useTasks';
 import { useTimeSummary } from '@/hooks/useTimeEntries';
 import { useAuthStore } from '@/stores/authStore';
+import { api } from '@/lib/api';
 
 function getMonday(date: Date): Date {
   const d = new Date(date);
@@ -20,8 +24,18 @@ function formatDate(dateStr: string): string {
 
 export default function TimePage() {
   const { team } = useTeam();
+  const { groups } = useGroups();
   const teamId = useAuthStore((s) => s.activeTeamId);
+  const currentUserId = useAuthStore((s) => s.user?.id);
+  const qc = useQueryClient();
   const [weekOffset, setWeekOffset] = useState(0);
+
+  // Entry form state
+  const [entryGroupId, setEntryGroupId] = useState('');
+  const [entryHours, setEntryHours] = useState('');
+  const [entryDate, setEntryDate] = useState(new Date().toISOString().split('T')[0]);
+  const [entryNote, setEntryNote] = useState('');
+  const [showForm, setShowForm] = useState(false);
 
   const weekOf = useMemo(() => {
     const monday = getMonday(new Date());
@@ -34,11 +48,39 @@ export default function TimePage() {
     return `Week of ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
   }, [weekOf]);
 
-  // Find members with time tracking enabled
   const trackedMembers = team?.members.filter((m) => m.timeTrackingEnabled) || [];
-  const selectedUserId = trackedMembers[0]?.userId || null;
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const activeUserId = selectedUserId || trackedMembers[0]?.userId || null;
 
-  const { data: summary, isLoading } = useTimeSummary(selectedUserId, weekOf);
+  // Check if current user has time tracking enabled
+  const currentUserTracked = team?.members.find((m) => m.userId === currentUserId)?.timeTrackingEnabled;
+
+  const { data: summary, isLoading } = useTimeSummary(activeUserId, weekOf);
+
+  const logTime = useMutation({
+    mutationFn: (data: { groupId: string; hours: number; date: string; note: string }) =>
+      api(`/teams/${teamId}/time`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['time-summary'] });
+      setEntryHours('');
+      setEntryNote('');
+      setShowForm(false);
+    },
+  });
+
+  const handleLogTime = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!entryGroupId || !entryHours) return;
+    logTime.mutate({
+      groupId: entryGroupId,
+      hours: parseFloat(entryHours),
+      date: new Date(entryDate).toISOString(),
+      note: entryNote,
+    });
+  };
 
   return (
     <>
@@ -63,8 +105,8 @@ export default function TimePage() {
             </button>
             <button
               onClick={() => {
-                if (selectedUserId && teamId) {
-                  window.open(`/api/v1/teams/${teamId}/time/export?userId=${selectedUserId}&weekOf=${weekOf}`, '_blank');
+                if (activeUserId && teamId) {
+                  window.open(`/api/v1/teams/${teamId}/time/export?userId=${activeUserId}&weekOf=${weekOf}`, '_blank');
                 }
               }}
               className="font-mono text-[11px] px-2.5 py-[4px] bg-bg-raised border border-border rounded text-text-secondary hover:bg-bg-hover hover:text-text transition-all ml-2"
@@ -75,6 +117,95 @@ export default function TimePage() {
         </div>
       </div>
       <div className="flex-1 overflow-y-auto px-7 py-6 pb-10 max-w-[600px]">
+        {/* Log time form */}
+        {currentUserTracked && (
+          <div className="mb-6">
+            {showForm ? (
+              <form onSubmit={handleLogTime} className="bg-bg-raised border border-border rounded-lg p-4">
+                <div className="font-mono text-[10px] uppercase tracking-widest text-text-tertiary mb-3">Log Time</div>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  <select
+                    value={entryGroupId}
+                    onChange={(e) => setEntryGroupId(e.target.value)}
+                    required
+                    className="bg-bg border border-border rounded px-2 py-1.5 font-mono text-[12px] text-text outline-none focus:border-accent"
+                  >
+                    <option value="">Group</option>
+                    {groups.map((g) => (
+                      <option key={g._id} value={g._id}>{g.name}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    step="0.25"
+                    min="0.25"
+                    value={entryHours}
+                    onChange={(e) => setEntryHours(e.target.value)}
+                    placeholder="Hours"
+                    required
+                    className="bg-bg border border-border rounded px-2 py-1.5 font-mono text-[12px] text-accent w-20 outline-none focus:border-accent"
+                  />
+                  <input
+                    type="date"
+                    value={entryDate}
+                    onChange={(e) => setEntryDate(e.target.value)}
+                    className="bg-bg border border-border rounded px-2 py-1.5 font-mono text-[12px] text-text-secondary outline-none focus:border-accent [color-scheme:dark]"
+                  />
+                </div>
+                <input
+                  type="text"
+                  value={entryNote}
+                  onChange={(e) => setEntryNote(e.target.value)}
+                  placeholder="What did you work on?"
+                  className="w-full bg-bg border border-border rounded px-2 py-1.5 text-[12px] text-text outline-none focus:border-accent mb-3 font-body"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    disabled={logTime.isPending}
+                    className="font-mono text-[11px] bg-accent text-bg px-3 py-1.5 rounded hover:bg-accent-hover transition-colors disabled:opacity-50"
+                  >
+                    {logTime.isPending ? 'Logging...' : 'Log'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                    className="font-mono text-[11px] text-text-tertiary px-3 py-1.5"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <button
+                onClick={() => setShowForm(true)}
+                className="font-mono text-[12px] text-text-tertiary hover:text-accent transition-colors"
+              >
+                + Log time
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Member selector */}
+        {trackedMembers.length > 1 && (
+          <div className="flex items-center gap-2 mb-4">
+            {trackedMembers.map((m) => (
+              <button
+                key={m.userId}
+                onClick={() => setSelectedUserId(m.userId)}
+                className={`font-mono text-[11px] px-2.5 py-[3px] rounded transition-all ${
+                  (activeUserId === m.userId)
+                    ? 'text-blue bg-blue-dim border border-blue'
+                    : 'text-text-tertiary bg-bg-active border border-transparent hover:text-text-secondary'
+                }`}
+              >
+                @{m.userId.slice(-6)}
+              </button>
+            ))}
+          </div>
+        )}
+
         {trackedMembers.length === 0 ? (
           <p className="text-text-tertiary text-[13px] italic">
             No team members have time tracking enabled. Enable it in Settings.
@@ -85,9 +216,11 @@ export default function TimePage() {
           <p className="text-text-tertiary text-[13px] italic">No time entries this week.</p>
         ) : (
           <>
-            <div className="font-mono text-[13px] text-blue mb-4">
-              @{selectedUserId?.slice(-6)}
-            </div>
+            {trackedMembers.length <= 1 && (
+              <div className="font-mono text-[13px] text-blue mb-4">
+                @{activeUserId?.slice(-6)}
+              </div>
+            )}
 
             {summary.groups.map((g, i) => (
               <div key={i} className="mb-5">
