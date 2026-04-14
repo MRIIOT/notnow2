@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(start:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsx:*)",
+      "Bash(curl -s http://localhost:4000/api/v1/health)",
+      "Bash(curl -s -X POST http://localhost:4000/api/v1/auth/signup -H 'Content-Type: application/json' -d '{\"username\":\"chris\",\"email\":\"chris@mriiot.com\",\"password\":\"test123\"}')",
+      "Bash(curl -s -X POST http://localhost:4000/api/v1/auth/login -H 'Content-Type: application/json' -d '{\"emailOrUsername\":\"chris\",\"password\":\"test123\"}')",
+      "Bash(npx next:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/auth/login)",
+      "Bash(curl:*)",
+      "Bash(taskkill //F //IM node.exe)",
+      "Bash(git status:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

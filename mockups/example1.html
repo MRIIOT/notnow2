@@ -1,0 +1,1874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>notnow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0e0e10;
+    --bg-surface: #16161a;
+    --bg-raised: #1c1c21;
+    --bg-hover: #22222a;
+    --bg-active: #2a2a35;
+    --border: #2a2a33;
+    --border-subtle: #1f1f28;
+    --text: #e2e0d8;
+    --text-secondary: #8a8880;
+    --text-tertiary: #5a5850;
+    --accent: #d4a843;
+    --accent-dim: #d4a84320;
+    --accent-hover: #e0b84f;
+    --green: #5a9a6a;
+    --green-dim: #5a9a6a20;
+    --red: #c45a5a;
+    --red-dim: #c45a5a20;
+    --blue: #5a7a9a;
+    --blue-dim: #5a7a9a25;
+    --orange: #c4883a;
+    --orange-dim: #c4883a20;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-body: 'DM Sans', sans-serif;
+    --radius: 4px;
+    --radius-lg: 8px;
+    --sidebar-width: 220px;
+  }
+
+  html { font-size: 14px; }
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Auth screens ── */
+  .auth-screen {
+    display: none;
+    height: 100vh;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    position: relative;
+  }
+  .auth-screen.active { display: flex; }
+  .auth-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 36px 40px;
+    width: 380px;
+    max-width: 90vw;
+  }
+  .auth-logo {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .auth-logo span { color: var(--text-tertiary); }
+  .auth-subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 28px;
+  }
+  .auth-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+    display: block;
+  }
+  .auth-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    margin-bottom: 16px;
+    transition: border-color 0.15s;
+  }
+  .auth-input:focus { border-color: var(--accent); }
+  .auth-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .auth-input-row .auth-input { margin-bottom: 0; }
+  .auth-input-prefix {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+  }
+  .auth-available {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--green);
+    flex-shrink: 0;
+  }
+  .auth-btn {
+    width: 100%;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--radius);
+    padding: 10px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+    margin-top: 4px;
+  }
+  .auth-btn:hover { background: var(--accent-hover); }
+  .auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+    color: var(--text-tertiary);
+    font-size: 12px;
+  }
+  .auth-divider::before, .auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .auth-link {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 16px;
+  }
+  .auth-link a {
+    color: var(--accent);
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .auth-link a:hover { text-decoration: underline; }
+  .auth-invite {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .auth-invite-team {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .auth-invite-btn {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: var(--green-dim);
+    color: var(--green);
+    border: 1px solid var(--green);
+    border-radius: var(--radius);
+    padding: 3px 10px;
+    cursor: pointer;
+  }
+
+  /* ── Topbar ── */
+  .topbar {
+    height: 44px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+  .logo span { color: var(--text-tertiary); }
+
+  /* ── Team switcher ── */
+  .team-switcher-wrap { position: relative; }
+  .team-switcher {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .team-switcher:hover { background: var(--bg-hover); color: var(--text); }
+  .team-switcher .arrow { font-size: 9px; color: var(--text-tertiary); }
+  .team-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 6px;
+    min-width: 200px;
+    z-index: 100;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .team-dropdown.open { display: block; }
+  .team-dropdown-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 10px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-secondary);
+    transition: all 0.1s;
+  }
+  .team-dropdown-item:hover { background: var(--bg-hover); color: var(--text); }
+  .team-dropdown-item.active { color: var(--accent); }
+  .team-dropdown-item .check { font-size: 11px; color: var(--accent); }
+  .team-dropdown-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 8px;
+  }
+  .team-dropdown-item.action { color: var(--text-tertiary); font-size: 11px; }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .settings-btn {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text-tertiary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: var(--radius);
+    transition: all 0.12s;
+  }
+  .settings-btn:hover { background: var(--bg-hover); color: var(--text-secondary); }
+  .user-badge {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .user-badge:hover { background: var(--bg-hover); color: var(--text); }
+
+  /* ── Layout ── */
+  .app-shell { display: none; flex-direction: column; height: 100vh; }
+  .app-shell.active { display: flex; }
+  .layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+  }
+  .sidebar-section { padding: 12px 10px 6px; }
+  .sidebar-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-tertiary);
+    padding: 0 8px;
+    margin-bottom: 6px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.12s;
+    font-size: 13px;
+    color: var(--text-secondary);
+    user-select: none;
+  }
+  .nav-item:hover { background: var(--bg-hover); color: var(--text); }
+  .nav-item.active { background: var(--accent-dim); color: var(--accent); }
+  .nav-item .icon {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    margin-right: 8px;
+    width: 16px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .nav-item .count {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-tertiary);
+    min-width: 16px;
+    text-align: right;
+  }
+  .nav-item.active .count { color: var(--accent); opacity: 0.6; }
+  .nav-item-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sidebar-divider { height: 1px; background: var(--border); margin: 6px 18px; }
+  .sidebar-bottom { margin-top: auto; padding: 10px; }
+  .add-group-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-tertiary);
+    transition: all 0.12s;
+    font-family: var(--font-mono);
+  }
+  .add-group-btn:hover { background: var(--bg-hover); color: var(--text-secondary); }
+
+  /* ── Main content ── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .main-header {
+    padding: 20px 28px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+  }
+  .main-title {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .main-title .view-icon { color: var(--text-tertiary); font-size: 14px; }
+  .main-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .header-btn {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: var(--radius);
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .header-btn:hover { background: var(--bg-hover); color: var(--text); }
+  .header-nav-btn {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 2px 8px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .header-nav-btn:hover { background: var(--bg-hover); color: var(--text-secondary); }
+
+  .main-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 28px 40px;
+  }
+
+  /* ── Task input ── */
+  .task-input-wrapper { padding: 14px 0; }
+  .task-input {
+    width: 100%;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .task-input::placeholder { color: var(--text-tertiary); }
+  .task-input:focus { border-color: var(--accent); }
+
+  /* ── Section headers ── */
+  .section-header {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-tertiary);
+    padding: 18px 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-header::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-subtle);
+  }
+  .section-header.waiting { color: var(--blue); }
+  .section-header.waiting::after { background: var(--blue-dim); }
+  .section-header.someday { color: var(--text-tertiary); }
+  .section-header.done { color: var(--text-tertiary); }
+  .section-header .section-count {
+    font-weight: 400;
+    opacity: 0.6;
+  }
+
+  /* ── Pipeline cutline ── */
+  .cutline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    cursor: ns-resize;
+    opacity: 0.5;
+    transition: opacity 0.15s;
+  }
+  .cutline:hover { opacity: 1; }
+  .cutline::before, .cutline::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: repeating-linear-gradient(
+      to right,
+      var(--accent) 0, var(--accent) 4px,
+      transparent 4px, transparent 10px
+    );
+  }
+  .cutline-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* ── Task rows ── */
+  .task-list { list-style: none; }
+  .task-row {
+    display: flex;
+    align-items: flex-start;
+    padding: 7px 8px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background 0.1s;
+    gap: 10px;
+    position: relative;
+  }
+  .task-row:hover { background: var(--bg-hover); }
+  .task-row.expanded {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 12px 14px;
+    margin: 4px 0;
+    flex-direction: column;
+    gap: 0;
+  }
+  .task-row-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+  .task-rank {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-tertiary);
+    min-width: 20px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .task-checkbox {
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--text-tertiary);
+    border-radius: 3px;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: all 0.12s;
+    position: relative;
+    margin-top: 1px;
+  }
+  .task-checkbox:hover { border-color: var(--accent); }
+  .task-checkbox.checked {
+    background: var(--green);
+    border-color: var(--green);
+  }
+  .task-checkbox.checked::after {
+    content: '\2713';
+    position: absolute;
+    top: -1px; left: 2px;
+    font-size: 11px;
+    color: white;
+    font-weight: 700;
+  }
+  .task-checkbox.cancelled {
+    background: var(--red);
+    border-color: var(--red);
+  }
+  .task-checkbox.cancelled::after {
+    content: '\2715';
+    position: absolute;
+    top: -1px; left: 2px;
+    font-size: 10px;
+    color: white;
+    font-weight: 700;
+  }
+
+  .task-title {
+    flex: 1;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .task-title.completed {
+    text-decoration: line-through;
+    color: var(--text-tertiary);
+  }
+  .task-title.cancelled-text {
+    text-decoration: line-through;
+    color: var(--text-tertiary);
+  }
+  .task-status-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .task-status-label.completed-label {
+    color: var(--green);
+    background: var(--green-dim);
+  }
+  .task-status-label.cancelled-label {
+    color: var(--red);
+    background: var(--red-dim);
+  }
+  .task-cancel-reason {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-tertiary);
+    opacity: 0.7;
+  }
+
+  .task-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .task-group-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    background: var(--bg-active);
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+  .task-assignee {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--blue);
+  }
+  .task-date {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+  }
+  .task-reminder {
+    font-size: 11px;
+    color: var(--orange);
+  }
+  .task-time {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .task-pipeline-num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-tertiary);
+    opacity: 0.5;
+  }
+
+  /* ── Expanded task detail ── */
+  .task-detail {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    width: 100%;
+  }
+  .task-detail-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .meta-chip {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: var(--radius);
+    background: var(--bg-active);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .meta-chip.assignee { color: var(--blue); background: var(--blue-dim); }
+  .meta-chip.date { color: var(--text-secondary); }
+  .meta-chip.reminder { color: var(--orange); }
+  .meta-chip.time { color: var(--green); background: var(--green-dim); }
+
+  .task-notes {
+    background: var(--bg);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    min-height: 60px;
+  }
+  .task-notes a { color: var(--accent); text-decoration: none; }
+  .task-notes a:hover { text-decoration: underline; }
+
+  .subtask-list { list-style: none; padding-left: 0; }
+  .subtask-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-tertiary);
+    margin-bottom: 6px;
+  }
+  .subtask-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .subtask-row .task-checkbox { width: 14px; height: 14px; }
+  .subtask-row .task-checkbox.checked::after { top: -2px; left: 1px; font-size: 10px; }
+
+  /* ── Upcoming view time buckets ── */
+  .time-bucket {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    padding: 16px 0 6px;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 2px;
+  }
+  .time-bucket.overdue { color: var(--red); }
+  .time-bucket.current { color: var(--accent); }
+
+  /* ── Context menu ── */
+  .context-menu {
+    display: none;
+    position: fixed;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 5px;
+    min-width: 180px;
+    z-index: 200;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  }
+  .context-menu.open { display: block; }
+  .context-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 12px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+    transition: all 0.1s;
+  }
+  .context-menu-item:hover { background: var(--bg-hover); color: var(--text); }
+  .context-menu-item .cm-icon {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    width: 16px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .context-menu-item.complete .cm-icon { color: var(--green); }
+  .context-menu-item.cancel .cm-icon { color: var(--red); }
+  .context-menu-item.delete .cm-icon { color: var(--text-tertiary); }
+  .context-menu-divider { height: 1px; background: var(--border); margin: 3px 8px; }
+
+  /* ── Time tracking view ── */
+  .time-summary-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  .time-member {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--blue);
+    margin-bottom: 16px;
+  }
+  .time-group-block {
+    margin-bottom: 20px;
+  }
+  .time-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0 6px;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 4px;
+  }
+  .time-group-name {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+  .time-group-rate {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-tertiary);
+  }
+  .time-entry {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 5px 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .time-entry-date {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-tertiary);
+    min-width: 50px;
+  }
+  .time-entry-hours {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    min-width: 36px;
+    text-align: right;
+  }
+  .time-entry-note {
+    flex: 1;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .time-entry-task {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-tertiary);
+    padding-left: 16px;
+    margin-bottom: 2px;
+  }
+  .time-group-total {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 6px 8px 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-tertiary);
+    border-top: 1px solid var(--border-subtle);
+    margin-top: 4px;
+  }
+  .time-group-total .hours { color: var(--accent); }
+
+  .time-summary-totals {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 2px solid var(--border);
+  }
+  .time-total-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .time-total-row .group-name { color: var(--text-secondary); }
+  .time-total-row .hours { color: var(--accent); min-width: 50px; text-align: right; }
+  .time-total-row .rate { color: var(--text-tertiary); min-width: 60px; text-align: right; }
+  .time-total-row .amount { color: var(--text); min-width: 70px; text-align: right; }
+  .time-grand-total {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 10px 8px 0;
+    margin-top: 6px;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  /* ── Settings view ── */
+  .settings-section {
+    margin-bottom: 28px;
+  }
+  .settings-section-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-tertiary);
+    margin-bottom: 12px;
+  }
+  .settings-member-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--bg-raised);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    margin-bottom: 6px;
+  }
+  .settings-member-name {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text);
+  }
+  .settings-member-role {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-tertiary);
+  }
+  .settings-member-you {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent);
+    margin-left: 6px;
+    opacity: 0.7;
+  }
+  .settings-add-member {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+  }
+  .settings-add-member input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 7px 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text);
+    outline: none;
+  }
+  .settings-add-member input:focus { border-color: var(--accent); }
+  .settings-add-member button {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .settings-add-member button:hover { background: var(--accent); color: var(--bg); }
+  .settings-hint {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  .settings-time-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--bg-raised);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    margin-bottom: 6px;
+  }
+  .settings-time-user {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text);
+  }
+  .settings-time-toggle {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    border: 1px solid var(--border);
+    transition: all 0.12s;
+  }
+  .settings-time-toggle.on {
+    color: var(--green);
+    background: var(--green-dim);
+    border-color: var(--green);
+  }
+  .settings-time-toggle.off {
+    color: var(--text-tertiary);
+    background: var(--bg);
+  }
+
+  .settings-rate-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    margin-bottom: 4px;
+  }
+  .settings-rate-group {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .settings-rate-dots {
+    flex: 1;
+    border-bottom: 1px dotted var(--border);
+    margin: 0 12px;
+    height: 1px;
+  }
+  .settings-rate-value {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+
+  /* ── View panels ── */
+  .view-panel { display: none; }
+  .view-panel.active { display: block; }
+
+  /* ── Animations ── */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .task-row { animation: fadeInUp 0.25s ease both; }
+  .task-list .task-row:nth-child(1) { animation-delay: 0.02s; }
+  .task-list .task-row:nth-child(2) { animation-delay: 0.04s; }
+  .task-list .task-row:nth-child(3) { animation-delay: 0.06s; }
+  .task-list .task-row:nth-child(4) { animation-delay: 0.08s; }
+  .task-list .task-row:nth-child(5) { animation-delay: 0.10s; }
+  .task-list .task-row:nth-child(6) { animation-delay: 0.12s; }
+  .task-list .task-row:nth-child(7) { animation-delay: 0.14s; }
+  .task-list .task-row:nth-child(8) { animation-delay: 0.16s; }
+  .task-list .task-row:nth-child(9) { animation-delay: 0.18s; }
+  .task-list .task-row:nth-child(10) { animation-delay: 0.20s; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .auth-card { animation: fadeInUp 0.35s ease both; }
+
+  /* ── Grain overlay ── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.025;
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* ── Drag handle ── */
+  .drag-handle {
+    color: var(--text-tertiary);
+    opacity: 0;
+    font-size: 11px;
+    transition: opacity 0.1s;
+    cursor: grab;
+    flex-shrink: 0;
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+  .task-row:hover .drag-handle { opacity: 0.5; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════ -->
+<!-- AUTH: Sign Up                         -->
+<!-- ══════════════════════════════════════ -->
+<div class="auth-screen active" id="auth-signup">
+  <div class="auth-card">
+    <div class="auth-logo">notnow<span>.</span></div>
+    <div class="auth-subtitle">Tasks that wait until you're ready.</div>
+
+    <label class="auth-label">Your @username</label>
+    <div class="auth-input-row">
+      <span class="auth-input-prefix">@</span>
+      <input type="text" class="auth-input" value="chris" />
+      <span class="auth-available">&#10003; available</span>
+    </div>
+
+    <label class="auth-label">Email</label>
+    <input type="email" class="auth-input" value="chris@mriiot.com" />
+
+    <label class="auth-label">Password</label>
+    <input type="password" class="auth-input" value="password123" />
+
+    <button class="auth-btn" onclick="showScreen('auth-create-team')">Sign Up</button>
+
+    <div class="auth-link">Already have an account? <a onclick="showScreen('auth-login')">Log in</a></div>
+  </div>
+</div>
+
+<!-- AUTH: Log In -->
+<div class="auth-screen" id="auth-login">
+  <div class="auth-card">
+    <div class="auth-logo">notnow<span>.</span></div>
+    <div class="auth-subtitle">Welcome back.</div>
+
+    <label class="auth-label">Email or @username</label>
+    <input type="text" class="auth-input" value="chris@mriiot.com" />
+
+    <label class="auth-label">Password</label>
+    <input type="password" class="auth-input" value="password123" />
+
+    <button class="auth-btn" onclick="showScreen('app')">Log In</button>
+
+    <div class="auth-link">No account? <a onclick="showScreen('auth-signup')">Sign up</a></div>
+  </div>
+</div>
+
+<!-- AUTH: Create / Join Team -->
+<div class="auth-screen" id="auth-create-team">
+  <div class="auth-card">
+    <div class="auth-logo">notnow<span>.</span></div>
+    <div class="auth-subtitle">Welcome @chris! Create or join a team.</div>
+
+    <label class="auth-label">Create a team</label>
+    <div class="auth-input-row">
+      <span class="auth-input-prefix">@</span>
+      <input type="text" class="auth-input" value="mriiot" />
+      <span class="auth-available">&#10003; available</span>
+    </div>
+
+    <label class="auth-label">Display name</label>
+    <input type="text" class="auth-input" value="MR IIoT Inc." />
+
+    <button class="auth-btn" onclick="showScreen('app')">Create Team</button>
+
+    <div class="auth-divider">or</div>
+
+    <label class="auth-label">Pending invites</label>
+    <div class="auth-invite">
+      <span class="auth-invite-team">@acmecorp invited you</span>
+      <button class="auth-invite-btn">Accept</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- APP SHELL                             -->
+<!-- ══════════════════════════════════════ -->
+<div class="app-shell" id="app">
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">notnow<span>.</span></div>
+    <div class="team-switcher-wrap">
+      <div class="team-switcher" onclick="toggleTeamDropdown()">
+        @mriiot <span class="arrow">&#9662;</span>
+      </div>
+      <div class="team-dropdown" id="teamDropdown">
+        <div class="team-dropdown-item active">@mriiot <span class="check">&#10003;</span></div>
+        <div class="team-dropdown-item">@chrisp</div>
+        <div class="team-dropdown-divider"></div>
+        <div class="team-dropdown-item action">+ Create team</div>
+        <div class="team-dropdown-item action">Join a team</div>
+      </div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <button class="settings-btn" onclick="switchView('settings', null)" title="Team settings">&#9881;</button>
+    <div class="user-badge">@chris</div>
+  </div>
+</div>
+
+<!-- Layout -->
+<div class="layout">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Views</div>
+      <div class="nav-item active" onclick="switchView('pipeline', this)">
+        <span><span class="icon">&#9654;</span><span class="nav-item-label">Pipeline</span></span>
+      </div>
+      <div class="nav-item" onclick="switchView('upcoming', this)">
+        <span><span class="icon">&#9776;</span><span class="nav-item-label">Upcoming</span></span>
+      </div>
+      <div class="nav-item" onclick="switchView('time', this)">
+        <span><span class="icon">&#9201;</span><span class="nav-item-label">Time</span></span>
+      </div>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Groups</div>
+      <div class="nav-item" onclick="switchView('group-ccs', this)">
+        <span class="nav-item-label">CCS</span>
+        <span class="count">3</span>
+      </div>
+      <div class="nav-item" onclick="switchView('group-oakhouse', this)">
+        <span class="nav-item-label">OAKHOUSE</span>
+        <span class="count">2</span>
+      </div>
+      <div class="nav-item" onclick="switchView('group-tempco', this)">
+        <span class="nav-item-label">TEMPCO</span>
+        <span class="count">1</span>
+      </div>
+      <div class="nav-item" onclick="switchView('group-sms', this)">
+        <span class="nav-item-label">SMS</span>
+        <span class="count">1</span>
+      </div>
+      <div class="nav-item" onclick="switchView('group-royal', this)">
+        <span class="nav-item-label">ROYAL</span>
+        <span class="count">2</span>
+      </div>
+      <div class="nav-item" onclick="switchView('group-oxbox', this)">
+        <span class="nav-item-label">OXBOX</span>
+        <span class="count">1</span>
+      </div>
+      <div class="nav-item" onclick="switchView('group-i3x', this)">
+        <span class="nav-item-label">I3X</span>
+        <span class="count">2</span>
+      </div>
+      <div class="nav-item" onclick="switchView('group-dime', this)">
+        <span class="nav-item-label">DIME</span>
+        <span class="count">1</span>
+      </div>
+      <div class="nav-item" onclick="switchView('group-home', this)">
+        <span class="nav-item-label">HOME</span>
+        <span class="count">2</span>
+      </div>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="add-group-btn">+ New group</div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- ═══ PIPELINE VIEW ═══ -->
+    <div class="view-panel active" id="view-pipeline">
+      <div class="main-header">
+        <div class="main-title"><span class="view-icon">&#9654;</span> Pipeline</div>
+      </div>
+      <div class="main-body">
+        <ul class="task-list">
+          <li class="task-row" oncontextmenu="showContextMenu(event)">
+            <span class="drag-handle">&#8942;&#8942;</span>
+            <span class="task-rank">1.</span>
+            <div class="task-checkbox"></div>
+            <span class="task-title">Load up Petr's boards</span>
+            <div class="task-meta"><span class="task-group-tag">CCS</span></div>
+          </li>
+          <li class="task-row" oncontextmenu="showContextMenu(event)">
+            <span class="drag-handle">&#8942;&#8942;</span>
+            <span class="task-rank">2.</span>
+            <div class="task-checkbox"></div>
+            <span class="task-title">Furnace connectivity</span>
+            <div class="task-meta"><span class="task-group-tag">TEMPCO</span></div>
+          </li>
+          <li class="task-row" oncontextmenu="showContextMenu(event)">
+            <span class="drag-handle">&#8942;&#8942;</span>
+            <span class="task-rank">3.</span>
+            <div class="task-checkbox"></div>
+            <span class="task-title">Keep working on HTM</span>
+            <div class="task-meta"><span class="task-group-tag">SMS</span></div>
+          </li>
+          <li class="task-row" oncontextmenu="showContextMenu(event)">
+            <span class="drag-handle">&#8942;&#8942;</span>
+            <span class="task-rank">4.</span>
+            <div class="task-checkbox"></div>
+            <span class="task-title">Get access to infra</span>
+            <div class="task-meta"><span class="task-group-tag">OAKHOUSE</span></div>
+          </li>
+          <li class="task-row" oncontextmenu="showContextMenu(event)">
+            <span class="drag-handle">&#8942;&#8942;</span>
+            <span class="task-rank">5.</span>
+            <div class="task-checkbox"></div>
+            <span class="task-title">Proxmox backup cleanup</span>
+            <div class="task-meta"><span class="task-group-tag">HOME</span></div>
+          </li>
+          <li class="task-row" oncontextmenu="showContextMenu(event)">
+            <span class="drag-handle">&#8942;&#8942;</span>
+            <span class="task-rank">6.</span>
+            <div class="task-checkbox"></div>
+            <span class="task-title">Troubleshoot Emergent displays</span>
+            <div class="task-meta"><span class="task-group-tag">CCS</span></div>
+          </li>
+          <li class="task-row" oncontextmenu="showContextMenu(event)">
+            <span class="drag-handle">&#8942;&#8942;</span>
+            <span class="task-rank">7.</span>
+            <div class="task-checkbox"></div>
+            <span class="task-title">Voice Agent</span>
+            <div class="task-meta">
+              <span class="task-assignee">@otto</span>
+              <span class="task-group-tag">CCS</span>
+            </div>
+          </li>
+        </ul>
+
+        <div class="cutline"><span class="cutline-label">below the line</span></div>
+
+        <ul class="task-list">
+          <li class="task-row" oncontextmenu="showContextMenu(event)">
+            <span class="drag-handle">&#8942;&#8942;</span>
+            <span class="task-rank">8.</span>
+            <div class="task-checkbox"></div>
+            <span class="task-title">Quote 40 hrs. Splunk OEE for single machine</span>
+            <div class="task-meta"><span class="task-group-tag">OAKHOUSE</span></div>
+          </li>
+          <li class="task-row" oncontextmenu="showContextMenu(event)">
+            <span class="drag-handle">&#8942;&#8942;</span>
+            <span class="task-rank">9.</span>
+            <div class="task-checkbox"></div>
+            <span class="task-title">Work with Otto on demos</span>
+            <div class="task-meta">
+              <span class="task-assignee">@otto</span>
+              <span class="task-group-tag">DIME</span>
+            </div>
+          </li>
+          <li class="task-row" oncontextmenu="showContextMenu(event)">
+            <span class="drag-handle">&#8942;&#8942;</span>
+            <span class="task-rank">10.</span>
+            <div class="task-checkbox"></div>
+            <span class="task-title">Support</span>
+            <div class="task-meta"><span class="task-group-tag">OXBOX</span></div>
+          </li>
+          <li class="task-row" oncontextmenu="showContextMenu(event)">
+            <span class="drag-handle">&#8942;&#8942;</span>
+            <span class="task-rank">11.</span>
+            <div class="task-checkbox"></div>
+            <span class="task-title">Get manuals, YT, drawings</span>
+            <div class="task-meta"><span class="task-group-tag">ROYAL</span></div>
+          </li>
+          <li class="task-row" oncontextmenu="showContextMenu(event)">
+            <span class="drag-handle">&#8942;&#8942;</span>
+            <span class="task-rank">12.</span>
+            <div class="task-checkbox"></div>
+            <span class="task-title">Prep for AI RAG</span>
+            <div class="task-meta"><span class="task-group-tag">ROYAL</span></div>
+          </li>
+        </ul>
+
+        <div class="section-header waiting">Waiting</div>
+        <ul class="task-list">
+          <li class="task-row" oncontextmenu="showContextMenu(event)">
+            <span class="drag-handle">&#8942;&#8942;</span>
+            <span class="task-rank"></span>
+            <div class="task-checkbox"></div>
+            <span class="task-title">Wait for V1</span>
+            <div class="task-meta"><span class="task-group-tag">I3X</span></div>
+          </li>
+          <li class="task-row" oncontextmenu="showContextMenu(event)">
+            <span class="drag-handle">&#8942;&#8942;</span>
+            <span class="task-rank"></span>
+            <div class="task-checkbox"></div>
+            <span class="task-title">Companion spec</span>
+            <div class="task-meta"><span class="task-group-tag">I3X</span></div>
+          </li>
+        </ul>
+
+        <div class="section-header someday">Someday</div>
+        <ul class="task-list">
+          <li class="task-row" oncontextmenu="showContextMenu(event)">
+            <span class="drag-handle">&#8942;&#8942;</span>
+            <span class="task-rank"></span>
+            <div class="task-checkbox"></div>
+            <span class="task-title">NAS RAM upgrade</span>
+            <div class="task-meta"><span class="task-group-tag">HOME</span></div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ═══ UPCOMING VIEW ═══ -->
+    <div class="view-panel" id="view-upcoming">
+      <div class="main-header">
+        <div class="main-title"><span class="view-icon">&#9776;</span> Upcoming</div>
+      </div>
+      <div class="main-body">
+        <div class="time-bucket current">This Week</div>
+        <ul class="task-list">
+          <li class="task-row">
+            <div class="task-checkbox"></div>
+            <span class="task-title">Load up Petr's boards</span>
+            <div class="task-meta"><span class="task-group-tag">CCS</span><span class="task-date">Apr 16</span></div>
+          </li>
+          <li class="task-row">
+            <div class="task-checkbox"></div>
+            <span class="task-title">Furnace connectivity</span>
+            <div class="task-meta"><span class="task-group-tag">TEMPCO</span><span class="task-date">Apr 18</span></div>
+          </li>
+        </ul>
+        <div class="time-bucket">Next Week</div>
+        <ul class="task-list">
+          <li class="task-row">
+            <div class="task-checkbox"></div>
+            <span class="task-title">Proxmox backup cleanup</span>
+            <div class="task-meta"><span class="task-group-tag">HOME</span><span class="task-date">Apr 22</span></div>
+          </li>
+        </ul>
+        <div class="time-bucket">April</div>
+        <ul class="task-list">
+          <li class="task-row">
+            <div class="task-checkbox"></div>
+            <span class="task-title">Demo to client</span>
+            <div class="task-meta"><span class="task-assignee">@otto</span><span class="task-group-tag">CCS</span><span class="task-date">Apr 28</span><span class="task-reminder">&#128276;</span></div>
+          </li>
+        </ul>
+        <div class="time-bucket">May</div>
+        <ul class="task-list">
+          <li class="task-row">
+            <div class="task-checkbox"></div>
+            <span class="task-title">Quote 40 hrs. Splunk OEE</span>
+            <div class="task-meta"><span class="task-group-tag">OAKHOUSE</span><span class="task-date">May 15</span></div>
+          </li>
+        </ul>
+        <div class="time-bucket">No Date</div>
+        <ul class="task-list">
+          <li class="task-row"><div class="task-checkbox"></div><span class="task-title">Keep working on HTM</span><div class="task-meta"><span class="task-group-tag">SMS</span></div></li>
+          <li class="task-row"><div class="task-checkbox"></div><span class="task-title">Support</span><div class="task-meta"><span class="task-group-tag">OXBOX</span></div></li>
+          <li class="task-row"><div class="task-checkbox"></div><span class="task-title">NAS RAM upgrade</span><div class="task-meta"><span class="task-group-tag">HOME</span></div></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ═══ TIME TRACKING VIEW ═══ -->
+    <div class="view-panel" id="view-time">
+      <div class="main-header">
+        <div class="main-header-row">
+          <div class="main-title"><span class="view-icon">&#9201;</span> Time</div>
+          <div class="header-controls">
+            <button class="header-nav-btn">&#9664;</button>
+            <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-secondary)">Week of Apr 14</span>
+            <button class="header-nav-btn">&#9654;</button>
+            <button class="header-btn">Export</button>
+          </div>
+        </div>
+      </div>
+      <div class="main-body">
+        <div class="time-member">@otto</div>
+
+        <div class="time-group-block">
+          <div class="time-group-header">
+            <span class="time-group-name">CCS</span>
+            <span class="time-group-rate">$85/hr</span>
+          </div>
+          <div class="time-entry-task">Voice Agent</div>
+          <div class="time-entry">
+            <span class="time-entry-date">Apr 14</span>
+            <span class="time-entry-hours">2.5h</span>
+            <span class="time-entry-note">Streaming API setup</span>
+          </div>
+          <div class="time-entry">
+            <span class="time-entry-date">Apr 11</span>
+            <span class="time-entry-hours">1.0h</span>
+            <span class="time-entry-note">Initial scaffolding</span>
+          </div>
+          <div class="time-group-total">
+            <span class="hours">3.5h</span>
+          </div>
+        </div>
+
+        <div class="time-group-block">
+          <div class="time-group-header">
+            <span class="time-group-name">DIME</span>
+            <span class="time-group-rate">$110/hr</span>
+          </div>
+          <div class="time-entry-task">Work with Otto on demos</div>
+          <div class="time-entry">
+            <span class="time-entry-date">Apr 14</span>
+            <span class="time-entry-hours">1.5h</span>
+            <span class="time-entry-note">Built click-through prototype</span>
+          </div>
+          <div class="time-entry">
+            <span class="time-entry-date">Apr 12</span>
+            <span class="time-entry-hours">1.0h</span>
+            <span class="time-entry-note">Gathered sample data</span>
+          </div>
+          <div class="time-group-total">
+            <span class="hours">2.5h</span>
+          </div>
+        </div>
+
+        <div class="time-summary-totals">
+          <div class="time-total-row">
+            <span class="group-name">CCS</span>
+            <span class="hours">3.5h</span>
+            <span class="rate">&times; $85</span>
+            <span class="amount">$297.50</span>
+          </div>
+          <div class="time-total-row">
+            <span class="group-name">DIME</span>
+            <span class="hours">2.5h</span>
+            <span class="rate">&times; $110</span>
+            <span class="amount">$275.00</span>
+          </div>
+          <div class="time-grand-total">
+            <span>6.0h</span>
+            <span>$572.50</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ GROUP: CCS (with expanded task + done section) ═══ -->
+    <div class="view-panel" id="view-group-ccs">
+      <div class="main-header">
+        <div class="main-title">CCS</div>
+      </div>
+      <div class="main-body">
+        <div class="task-input-wrapper">
+          <input type="text" class="task-input" placeholder="+ Add task..." />
+        </div>
+        <ul class="task-list">
+          <li class="task-row" oncontextmenu="showContextMenu(event)">
+            <span class="drag-handle">&#8942;&#8942;</span>
+            <div class="task-checkbox"></div>
+            <span class="task-title">Load up Petr's boards</span>
+            <div class="task-meta"><span class="task-pipeline-num">#1</span></div>
+          </li>
+          <li class="task-row" oncontextmenu="showContextMenu(event)">
+            <span class="drag-handle">&#8942;&#8942;</span>
+            <div class="task-checkbox"></div>
+            <span class="task-title">Troubleshoot Emergent displays</span>
+            <div class="task-meta"><span class="task-pipeline-num">#6</span></div>
+          </li>
+
+          <!-- Expanded task -->
+          <li class="task-row expanded" oncontextmenu="showContextMenu(event)">
+            <div class="task-row-top">
+              <span class="drag-handle">&#8942;&#8942;</span>
+              <div class="task-checkbox"></div>
+              <span class="task-title">Voice Agent</span>
+              <div class="task-meta"><span class="task-pipeline-num">#7</span></div>
+            </div>
+            <div class="task-detail">
+              <div class="task-detail-meta">
+                <span class="meta-chip assignee">@otto</span>
+                <span class="meta-chip date">May 1</span>
+                <span class="meta-chip reminder">&#128276; Apr 28</span>
+                <span class="meta-chip time">&#9201; 4.5h logged</span>
+              </div>
+              <div class="task-notes">Called Deepgram support, they said the streaming API
+has a 15s timeout we need to handle. Use keepalive
+frames every 10s.
+
+Otto found a bug in the VAD &#8212; it clips the first
+200ms of speech. Workaround: pad the audio buffer.
+
+Client wants:
+- English + French
+- Max 2s latency
+- Fallback to whisper if Deepgram is down
+
+<a href="#">https://developers.deepgram.com/docs/streaming</a></div>
+              <div class="subtask-label">Subtasks</div>
+              <ul class="subtask-list">
+                <li class="subtask-row">
+                  <div class="task-checkbox checked"></div>
+                  <span class="task-title completed">Initial research</span>
+                </li>
+                <li class="subtask-row">
+                  <div class="task-checkbox checked"></div>
+                  <span class="task-title completed">Test with sample prompts</span>
+                  <span class="task-time">2.5h</span>
+                </li>
+                <li class="subtask-row">
+                  <div class="task-checkbox"></div>
+                  <span class="task-title">Set up Deepgram pipeline</span>
+                </li>
+                <li class="subtask-row">
+                  <div class="task-checkbox"></div>
+                  <span class="task-title">Demo to client</span>
+                  <span class="task-date">May 1</span>
+                </li>
+              </ul>
+            </div>
+          </li>
+        </ul>
+
+        <!-- Done / Cancelled section -->
+        <div class="section-header done">Done <span class="section-count">2 tasks</span></div>
+        <ul class="task-list">
+          <li class="task-row">
+            <div class="task-checkbox checked"></div>
+            <span class="task-title completed">Initial board prototype</span>
+            <div class="task-meta"><span class="task-status-label completed-label">completed</span></div>
+          </li>
+          <li class="task-row">
+            <div class="task-checkbox cancelled"></div>
+            <span class="task-title cancelled-text">Evaluate Azure speech services</span>
+            <div class="task-meta">
+              <span class="task-cancel-reason">duplicate</span>
+              <span class="task-status-label cancelled-label">cancelled</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ═══ GROUP: OAKHOUSE ═══ -->
+    <div class="view-panel" id="view-group-oakhouse">
+      <div class="main-header"><div class="main-title">OAKHOUSE</div></div>
+      <div class="main-body">
+        <div class="task-input-wrapper"><input type="text" class="task-input" placeholder="+ Add task..." /></div>
+        <ul class="task-list">
+          <li class="task-row" oncontextmenu="showContextMenu(event)"><span class="drag-handle">&#8942;&#8942;</span><div class="task-checkbox"></div><span class="task-title">Get access to infra</span><div class="task-meta"><span class="task-pipeline-num">#4</span></div></li>
+          <li class="task-row" oncontextmenu="showContextMenu(event)"><span class="drag-handle">&#8942;&#8942;</span><div class="task-checkbox"></div><span class="task-title">Quote 40 hours. Splunk OEE implementation for single machine.</span><div class="task-meta"><span class="task-pipeline-num">#8</span></div></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ═══ GROUP: TEMPCO ═══ -->
+    <div class="view-panel" id="view-group-tempco">
+      <div class="main-header"><div class="main-title">TEMPCO</div></div>
+      <div class="main-body">
+        <div class="task-input-wrapper"><input type="text" class="task-input" placeholder="+ Add task..." /></div>
+        <ul class="task-list">
+          <li class="task-row" oncontextmenu="showContextMenu(event)"><span class="drag-handle">&#8942;&#8942;</span><div class="task-checkbox"></div><span class="task-title">Furnace connectivity</span><div class="task-meta"><span class="task-pipeline-num">#2</span></div></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ═══ GROUP: SMS ═══ -->
+    <div class="view-panel" id="view-group-sms">
+      <div class="main-header"><div class="main-title">SMS</div></div>
+      <div class="main-body">
+        <div class="task-input-wrapper"><input type="text" class="task-input" placeholder="+ Add task..." /></div>
+        <ul class="task-list">
+          <li class="task-row" oncontextmenu="showContextMenu(event)"><span class="drag-handle">&#8942;&#8942;</span><div class="task-checkbox"></div><span class="task-title">Keep working on HTM</span><div class="task-meta"><span class="task-pipeline-num">#3</span></div></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ═══ GROUP: ROYAL ═══ -->
+    <div class="view-panel" id="view-group-royal">
+      <div class="main-header"><div class="main-title">ROYAL</div></div>
+      <div class="main-body">
+        <div class="task-input-wrapper"><input type="text" class="task-input" placeholder="+ Add task..." /></div>
+        <ul class="task-list">
+          <li class="task-row" oncontextmenu="showContextMenu(event)"><span class="drag-handle">&#8942;&#8942;</span><div class="task-checkbox"></div><span class="task-title">Get manuals, YT, drawings</span><div class="task-meta"><span class="task-pipeline-num">#11</span></div></li>
+          <li class="task-row" oncontextmenu="showContextMenu(event)"><span class="drag-handle">&#8942;&#8942;</span><div class="task-checkbox"></div><span class="task-title">Prep for AI RAG</span><div class="task-meta"><span class="task-pipeline-num">#12</span></div></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ═══ GROUP: OXBOX ═══ -->
+    <div class="view-panel" id="view-group-oxbox">
+      <div class="main-header"><div class="main-title">OXBOX</div></div>
+      <div class="main-body">
+        <div class="task-input-wrapper"><input type="text" class="task-input" placeholder="+ Add task..." /></div>
+        <ul class="task-list">
+          <li class="task-row" oncontextmenu="showContextMenu(event)"><span class="drag-handle">&#8942;&#8942;</span><div class="task-checkbox"></div><span class="task-title">Support</span><div class="task-meta"><span class="task-pipeline-num">#10</span></div></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ═══ GROUP: I3X ═══ -->
+    <div class="view-panel" id="view-group-i3x">
+      <div class="main-header"><div class="main-title">I3X</div></div>
+      <div class="main-body">
+        <div class="task-input-wrapper"><input type="text" class="task-input" placeholder="+ Add task..." /></div>
+        <ul class="task-list">
+          <li class="task-row" oncontextmenu="showContextMenu(event)"><span class="drag-handle">&#8942;&#8942;</span><div class="task-checkbox"></div><span class="task-title">Wait for V1</span></li>
+          <li class="task-row" oncontextmenu="showContextMenu(event)"><span class="drag-handle">&#8942;&#8942;</span><div class="task-checkbox"></div><span class="task-title">Companion spec</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ═══ GROUP: DIME ═══ -->
+    <div class="view-panel" id="view-group-dime">
+      <div class="main-header"><div class="main-title">DIME</div></div>
+      <div class="main-body">
+        <div class="task-input-wrapper"><input type="text" class="task-input" placeholder="+ Add task..." /></div>
+        <ul class="task-list">
+          <li class="task-row" oncontextmenu="showContextMenu(event)"><span class="drag-handle">&#8942;&#8942;</span><div class="task-checkbox"></div><span class="task-title">Work with Otto on demos</span><div class="task-meta"><span class="task-assignee">@otto</span><span class="task-pipeline-num">#9</span></div></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ═══ GROUP: HOME ═══ -->
+    <div class="view-panel" id="view-group-home">
+      <div class="main-header"><div class="main-title">HOME</div></div>
+      <div class="main-body">
+        <div class="task-input-wrapper"><input type="text" class="task-input" placeholder="+ Add task..." /></div>
+        <ul class="task-list">
+          <li class="task-row" oncontextmenu="showContextMenu(event)"><span class="drag-handle">&#8942;&#8942;</span><div class="task-checkbox"></div><span class="task-title">Proxmox backup cleanup</span><div class="task-meta"><span class="task-pipeline-num">#5</span></div></li>
+          <li class="task-row" oncontextmenu="showContextMenu(event)"><span class="drag-handle">&#8942;&#8942;</span><div class="task-checkbox"></div><span class="task-title">NAS RAM upgrade</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ═══ TEAM SETTINGS ═══ -->
+    <div class="view-panel" id="view-settings">
+      <div class="main-header">
+        <div class="main-title"><span class="view-icon">&#9881;</span> Team Settings</div>
+      </div>
+      <div class="main-body">
+        <div class="settings-section">
+          <div class="settings-section-title">Members</div>
+          <div class="settings-member-row">
+            <div>
+              <span class="settings-member-name">@chris</span>
+              <span class="settings-member-you">you</span>
+            </div>
+            <span class="settings-member-role">Owner</span>
+          </div>
+          <div class="settings-member-row">
+            <span class="settings-member-name">@otto</span>
+            <span class="settings-member-role">Member</span>
+          </div>
+          <div class="settings-add-member">
+            <input type="text" placeholder="@username" />
+            <button>Add</button>
+          </div>
+          <div class="settings-hint">User must have a notnow account. They'll get an invite notification.</div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">Time Tracking</div>
+          <div class="settings-time-row">
+            <span class="settings-time-user">@chris</span>
+            <span class="settings-time-toggle off">off</span>
+          </div>
+          <div class="settings-time-row">
+            <span class="settings-time-user">@otto</span>
+            <span class="settings-time-toggle on">on</span>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">Rates &mdash; @otto</div>
+          <div class="settings-rate-row">
+            <span class="settings-rate-group">Default</span>
+            <span class="settings-rate-dots"></span>
+            <span class="settings-rate-value">$85/hr</span>
+          </div>
+          <div class="settings-rate-row">
+            <span class="settings-rate-group">DIME</span>
+            <span class="settings-rate-dots"></span>
+            <span class="settings-rate-value">$110/hr</span>
+          </div>
+          <div class="settings-rate-row">
+            <span class="settings-rate-group">ROYAL</span>
+            <span class="settings-rate-dots"></span>
+            <span class="settings-rate-value">$95/hr</span>
+          </div>
+          <div class="settings-add-member" style="padding-top:4px">
+            <input type="text" placeholder="+ Add rate override" style="flex:1" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /layout -->
+</div><!-- /app-shell -->
+
+<!-- ══════════════════════════════════════ -->
+<!-- CONTEXT MENU                          -->
+<!-- ══════════════════════════════════════ -->
+<div class="context-menu" id="contextMenu">
+  <div class="context-menu-item complete" onclick="closeContextMenu()">
+    <span class="cm-icon">&#10003;</span> Complete
+  </div>
+  <div class="context-menu-item cancel" onclick="closeContextMenu()">
+    <span class="cm-icon">&#10005;</span> Cancel
+  </div>
+  <div class="context-menu-divider"></div>
+  <div class="context-menu-item delete" onclick="closeContextMenu()">
+    <span class="cm-icon">&#9249;</span> Delete
+  </div>
+</div>
+
+<script>
+  // ── Screen switching (auth -> app) ──
+  function showScreen(id) {
+    document.querySelectorAll('.auth-screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.app-shell').forEach(s => s.classList.remove('active'));
+    const el = document.getElementById(id);
+    if (el) el.classList.add('active');
+  }
+
+  // ── View switching (within app) ──
+  function switchView(viewId, navEl) {
+    document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+    const panel = document.getElementById('view-' + viewId);
+    if (panel) panel.classList.add('active');
+
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    if (navEl) navEl.classList.add('active');
+
+    if (panel) {
+      panel.querySelectorAll('.task-row').forEach(row => {
+        row.style.animation = 'none';
+        row.offsetHeight;
+        row.style.animation = '';
+      });
+    }
+  }
+
+  // ── Team dropdown ──
+  function toggleTeamDropdown() {
+    document.getElementById('teamDropdown').classList.toggle('open');
+  }
+
+  // ── Context menu ──
+  function showContextMenu(e) {
+    e.preventDefault();
+    const menu = document.getElementById('contextMenu');
+    menu.classList.add('open');
+    menu.style.left = e.clientX + 'px';
+    menu.style.top = e.clientY + 'px';
+  }
+  function closeContextMenu() {
+    document.getElementById('contextMenu').classList.remove('open');
+  }
+
+  // ── Close dropdowns on outside click ──
+  document.addEventListener('click', function(e) {
+    // Close team dropdown
+    if (!e.target.closest('.team-switcher-wrap')) {
+      document.getElementById('teamDropdown')?.classList.remove('open');
+    }
+    // Close context menu
+    if (!e.target.closest('.context-menu')) {
+      closeContextMenu();
+    }
+    // Checkbox toggle
+    if (e.target.classList.contains('task-checkbox')) {
+      e.target.classList.toggle('checked');
+      const title = e.target.nextElementSibling || e.target.parentElement.querySelector('.task-title');
+      if (title && title.classList.contains('task-title')) {
+        title.classList.toggle('completed');
+      }
+      e.stopPropagation();
+    }
+  });
+</script>
+</body>
+</html>

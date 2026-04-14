@@ -1,0 +1,7 @@
+{
+  "name": "notnow",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ]
+}
