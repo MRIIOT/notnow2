@@ -78,6 +78,34 @@ export function TaskDetail({ task, members, onUpdate }: TaskDetailProps) {
             </button>
           )}
         </div>
+
+        <div className="flex items-center gap-1.5">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-orange">&#128276;</span>
+          <input
+            type="date"
+            value={
+              task.reminders.length > 0 && !task.reminders[0].sent
+                ? new Date(task.reminders[0].date).toISOString().split('T')[0]
+                : ''
+            }
+            onChange={(e) => {
+              const val = e.target.value;
+              const reminders = val
+                ? [{ date: new Date(val).toISOString(), sent: false }]
+                : [];
+              onUpdate(task._id, { reminders } as any);
+            }}
+            className="bg-bg-active border-none rounded px-2 py-[3px] font-mono text-[11px] text-orange outline-none [color-scheme:dark]"
+          />
+          {task.reminders.length > 0 && !task.reminders[0].sent && (
+            <button
+              onClick={() => onUpdate(task._id, { reminders: [] } as any)}
+              className="font-mono text-[10px] text-text-tertiary hover:text-red transition-colors"
+            >
+              &#10005;
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Assignees */}

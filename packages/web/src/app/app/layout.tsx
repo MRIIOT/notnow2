@@ -6,12 +6,16 @@ import { useAuthStore } from '@/stores/authStore';
 import { api } from '@/lib/api';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Topbar } from '@/components/layout/Topbar';
+import { useSocket } from '@/hooks/useSocket';
 import type { Team, User } from '@/types';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, activeTeamId, setAuth, setTeams } = useAuthStore();
   const router = useRouter();
   const [ready, setReady] = useState(false);
+
+  // Real-time socket connection
+  useSocket();
 
   useEffect(() => {
     async function init() {
