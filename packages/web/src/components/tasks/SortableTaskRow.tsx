@@ -3,13 +3,14 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { TaskRow } from './TaskRow';
-import type { Task, Group } from '@/types';
+import type { Task, Group, TeamMember } from '@/types';
 
 interface SortableTaskRowProps {
   task: Task;
   rank?: number;
   showGroup?: boolean;
   groups?: Group[];
+  members?: TeamMember[];
   onComplete: (taskId: string) => void;
   onCancel: (taskId: string, reason?: string) => void;
   onDelete: (taskId: string) => void;

@@ -19,6 +19,7 @@ import {
 } from '@dnd-kit/sortable';
 import { useTasks } from '@/hooks/useTasks';
 import { useGroups } from '@/hooks/useGroups';
+import { useTeam } from '@/hooks/useTeam';
 import { SortableTaskRow } from '@/components/tasks/SortableTaskRow';
 import { TaskRow } from '@/components/tasks/TaskRow';
 import { TaskInput } from '@/components/tasks/TaskInput';
@@ -29,6 +30,7 @@ export default function GroupPage({ params }: { params: Promise<{ groupId: strin
   const { groupId } = use(params);
   const { tasks, createTask, updateTask, deleteTask, reorderTask } = useTasks('group', groupId);
   const { groups } = useGroups();
+  const { team } = useTeam();
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(
@@ -98,6 +100,7 @@ export default function GroupPage({ params }: { params: Promise<{ groupId: strin
                 <SortableTaskRow
                   key={t._id}
                   task={t}
+                  members={team?.members}
                   onComplete={handleComplete}
                   onCancel={handleCancel}
                   onDelete={handleDelete}
@@ -131,6 +134,7 @@ export default function GroupPage({ params }: { params: Promise<{ groupId: strin
                 <TaskRow
                   key={t._id}
                   task={t}
+                  members={team?.members}
                   onComplete={handleComplete}
                   onCancel={handleCancel}
                   onDelete={handleDelete}

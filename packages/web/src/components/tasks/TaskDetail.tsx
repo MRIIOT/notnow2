@@ -4,14 +4,15 @@ import { useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { api } from '@/lib/api';
 import { useQueryClient } from '@tanstack/react-query';
-import type { Task } from '@/types';
+import type { Task, TeamMember } from '@/types';
 
 interface TaskDetailProps {
   task: Task;
+  members?: TeamMember[];
   onUpdate: (taskId: string, data: Partial<Task>) => void;
 }
 
-export function TaskDetail({ task, onUpdate }: TaskDetailProps) {
+export function TaskDetail({ task, members, onUpdate }: TaskDetailProps) {
   const [notes, setNotes] = useState(task.notes);
   const [notesEditing, setNotesEditing] = useState(false);
   const [newSubtask, setNewSubtask] = useState('');
@@ -57,12 +58,55 @@ export function TaskDetail({ task, onUpdate }: TaskDetailProps) {
     <div className="mt-3 pt-3 border-t border-border w-full" onClick={(e) => e.stopPropagation()}>
       {/* Meta chips */}
       <div className="flex items-center gap-3 mb-3 flex-wrap">
-        {task.dueDate && (
-          <span className="font-mono text-[11px] px-2 py-[3px] rounded bg-bg-active text-text-secondary">
-            {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-          </span>
-        )}
+        <div className="flex items-center gap-1.5">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-text-tertiary">Due:</span>
+          <input
+            type="date"
+            value={task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : ''}
+            onChange={(e) => {
+              const val = e.target.value;
+              onUpdate(task._id, { dueDate: val ? new Date(val).toISOString() : null } as any);
+            }}
+            className="bg-bg-active border-none rounded px-2 py-[3px] font-mono text-[11px] text-text-secondary outline-none [color-scheme:dark]"
+          />
+          {task.dueDate && (
+            <button
+              onClick={() => onUpdate(task._id, { dueDate: null } as any)}
+              className="font-mono text-[10px] text-text-tertiary hover:text-red transition-colors"
+            >
+              &#10005;
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Assignees */}
+      {members && members.length > 0 && (
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-text-tertiary">Assign:</span>
+          {members.map((m) => {
+            const isAssigned = task.assignees.includes(m.userId);
+            return (
+              <button
+                key={m.userId}
+                onClick={() => {
+                  const newAssignees = isAssigned
+                    ? task.assignees.filter((id) => id !== m.userId)
+                    : [...task.assignees, m.userId];
+                  onUpdate(task._id, { assignees: newAssignees } as any);
+                }}
+                className={`font-mono text-[11px] px-2 py-[2px] rounded transition-all ${
+                  isAssigned
+                    ? 'text-blue bg-blue-dim border border-blue'
+                    : 'text-text-tertiary bg-bg-active border border-transparent hover:text-text-secondary'
+                }`}
+              >
+                @{m.userId.slice(-6)}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Notes */}
       {notesEditing ? (

@@ -117,6 +117,28 @@ export function Sidebar() {
           <span className="font-mono text-[13px] w-4 text-center">&#9776;</span>
           Upcoming
         </button>
+        <button
+          onClick={() => nav('/app/time')}
+          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-[13px] transition-all ${
+            isActive('/app/time')
+              ? 'bg-accent-dim text-accent'
+              : 'text-text-secondary hover:bg-bg-hover hover:text-text'
+          }`}
+        >
+          <span className="font-mono text-[13px] w-4 text-center">&#9201;</span>
+          Time
+        </button>
+        <button
+          onClick={() => nav('/app/settings')}
+          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-[13px] transition-all ${
+            isActive('/app/settings')
+              ? 'bg-accent-dim text-accent'
+              : 'text-text-secondary hover:bg-bg-hover hover:text-text'
+          }`}
+        >
+          <span className="font-mono text-[13px] w-4 text-center">&#9881;</span>
+          Settings
+        </button>
       </div>
 
       <div className="mx-[18px] h-px bg-border my-1.5" />

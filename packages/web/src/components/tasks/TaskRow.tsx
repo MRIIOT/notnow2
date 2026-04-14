@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities';
-import type { Task, Group } from '@/types';
+import type { Task, Group, TeamMember } from '@/types';
 import { TaskDetail } from './TaskDetail';
 import { ContextMenu } from './ContextMenu';
 
@@ -11,6 +11,7 @@ interface TaskRowProps {
   rank?: number;
   showGroup?: boolean;
   groups?: Group[];
+  members?: TeamMember[];
   dragListeners?: SyntheticListenerMap;
   onComplete: (taskId: string) => void;
   onCancel: (taskId: string, reason?: string) => void;
@@ -18,7 +19,7 @@ interface TaskRowProps {
   onUpdate: (taskId: string, data: Partial<Task>) => void;
 }
 
-export function TaskRow({ task, rank, showGroup, groups, dragListeners, onComplete, onCancel, onDelete, onUpdate }: TaskRowProps) {
+export function TaskRow({ task, rank, showGroup, groups, members, dragListeners, onComplete, onCancel, onDelete, onUpdate }: TaskRowProps) {
   const [expanded, setExpanded] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const rowRef = useRef<HTMLLIElement>(null);
@@ -92,8 +93,18 @@ export function TaskRow({ task, rank, showGroup, groups, dragListeners, onComple
             {task.title}
           </span>
           <div className="flex items-center gap-2.5 shrink-0">
-            {task.assignees.length > 0 && (
-              <span className="font-mono text-[11px] text-blue">@assigned</span>
+            {task.assignees.map((uid) => {
+              const member = members?.find((m) => m.userId === uid);
+              return (
+                <span key={uid} className="font-mono text-[11px] text-blue">
+                  @{member ? uid.slice(-6) : uid.slice(-6)}
+                </span>
+              );
+            })}
+            {task.dueDate && !isDone && (
+              <span className="font-mono text-[11px] text-text-tertiary">
+                {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </span>
             )}
             {showGroup && group && (
               <span className="font-mono text-[10px] tracking-wide px-[7px] py-[2px] rounded-[3px] bg-bg-active text-text-secondary">
@@ -116,7 +127,7 @@ export function TaskRow({ task, rank, showGroup, groups, dragListeners, onComple
         </div>
 
         {expanded && (
-          <TaskDetail task={task} onUpdate={onUpdate} />
+          <TaskDetail task={task} members={members} onUpdate={onUpdate} />
         )}
       </li>
 

@@ -19,6 +19,7 @@ import {
 } from '@dnd-kit/sortable';
 import { useTasks } from '@/hooks/useTasks';
 import { useGroups } from '@/hooks/useGroups';
+import { useTeam } from '@/hooks/useTeam';
 import { SortableTaskRow } from '@/components/tasks/SortableTaskRow';
 import { TaskRow } from '@/components/tasks/TaskRow';
 import { generateKeyBetween } from '@/lib/ordering';
@@ -29,6 +30,7 @@ type Section = 'above' | 'below' | 'waiting' | 'someday';
 export default function PipelinePage() {
   const { tasks, updateTask, deleteTask, reorderTask } = useTasks('pipeline');
   const { groups } = useGroups();
+  const { team } = useTeam();
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(
@@ -114,6 +116,7 @@ export default function PipelinePage() {
         rank={showRank ? rank++ : undefined}
         showGroup
         groups={groups}
+        members={team?.members}
         onComplete={handleComplete}
         onCancel={handleCancel}
         onDelete={handleDelete}
