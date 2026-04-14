@@ -8,9 +8,10 @@ import type { Group } from '@/types';
 export function useGroups() {
   const teamId = useAuthStore((s) => s.activeTeamId);
   const qc = useQueryClient();
+  const queryKey = ['groups', teamId];
 
   const query = useQuery({
-    queryKey: ['groups', teamId],
+    queryKey,
     queryFn: () => api<{ groups: Group[] }>(`/teams/${teamId}/groups`).then((d) => d.groups),
     enabled: !!teamId,
   });
@@ -21,8 +22,31 @@ export function useGroups() {
         method: 'POST',
         body: JSON.stringify({ name }),
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['groups', teamId] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey }),
   });
 
-  return { groups: query.data || [], isLoading: query.isLoading, createGroup };
+  const reorderGroups = useMutation({
+    mutationFn: (orderedIds: string[]) =>
+      api(`/teams/${teamId}/groups/reorder`, {
+        method: 'POST',
+        body: JSON.stringify({ orderedIds }),
+      }),
+    onMutate: async (orderedIds) => {
+      await qc.cancelQueries({ queryKey });
+      const prev = qc.getQueryData<Group[]>(queryKey);
+      if (prev) {
+        const reordered = orderedIds
+          .map((id) => prev.find((g) => g._id === id))
+          .filter(Boolean) as Group[];
+        qc.setQueryData<Group[]>(queryKey, reordered);
+      }
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) qc.setQueryData(queryKey, ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey }),
+  });
+
+  return { groups: query.data || [], isLoading: query.isLoading, createGroup, reorderGroups };
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities';
 import type { Task, Group } from '@/types';
 import { TaskDetail } from './TaskDetail';
 import { ContextMenu } from './ContextMenu';
@@ -10,13 +11,14 @@ interface TaskRowProps {
   rank?: number;
   showGroup?: boolean;
   groups?: Group[];
+  dragListeners?: SyntheticListenerMap;
   onComplete: (taskId: string) => void;
   onCancel: (taskId: string, reason?: string) => void;
   onDelete: (taskId: string) => void;
   onUpdate: (taskId: string, data: Partial<Task>) => void;
 }
 
-export function TaskRow({ task, rank, showGroup, groups, onComplete, onCancel, onDelete, onUpdate }: TaskRowProps) {
+export function TaskRow({ task, rank, showGroup, groups, dragListeners, onComplete, onCancel, onDelete, onUpdate }: TaskRowProps) {
   const [expanded, setExpanded] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const rowRef = useRef<HTMLLIElement>(null);
@@ -60,7 +62,11 @@ export function TaskRow({ task, rank, showGroup, groups, onComplete, onCancel, o
         onContextMenu={handleContextMenu}
       >
         <div className={`flex items-center gap-2.5 w-full ${expanded ? '' : ''}`}>
-          <span className="text-text-tertiary opacity-0 group-hover:opacity-50 text-[11px] cursor-grab shrink-0 tracking-wider mt-0.5">
+          <span
+            className="text-text-tertiary opacity-0 group-hover:opacity-50 text-[11px] cursor-grab shrink-0 tracking-wider mt-0.5 touch-none"
+            {...(dragListeners || {})}
+            onClick={(e) => e.stopPropagation()}
+          >
             &#8942;&#8942;
           </span>
           {rank !== undefined && (

@@ -39,16 +39,80 @@ export function useTasks(view: string, groupId?: string) {
         method: 'PATCH',
         body: JSON.stringify(data),
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks', teamId] }),
+    onMutate: async ({ taskId, ...data }) => {
+      // Optimistic update: apply changes immediately
+      await qc.cancelQueries({ queryKey });
+      const prev = qc.getQueryData<Task[]>(queryKey);
+      if (prev) {
+        qc.setQueryData<Task[]>(queryKey, prev.map((t) =>
+          t._id === taskId ? { ...t, ...data, ...(data.status === 'completed' ? { completedAt: new Date().toISOString() } : {}) } : t
+        ));
+      }
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) qc.setQueryData(queryKey, ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ['tasks', teamId] }),
   });
 
   const deleteTask = useMutation({
     mutationFn: (taskId: string) =>
       api(`/teams/${teamId}/tasks/${taskId}`, { method: 'DELETE' }),
-    onSuccess: () => {
+    onMutate: async (taskId) => {
+      await qc.cancelQueries({ queryKey });
+      const prev = qc.getQueryData<Task[]>(queryKey);
+      if (prev) {
+        qc.setQueryData<Task[]>(queryKey, prev.filter((t) => t._id !== taskId));
+      }
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) qc.setQueryData(queryKey, ctx.prev);
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ['tasks', teamId] });
       qc.invalidateQueries({ queryKey: ['groups', teamId] });
     },
+  });
+
+  const reorderTask = useMutation({
+    mutationFn: ({
+      taskId,
+      ...data
+    }: {
+      taskId: string;
+      pipelineOrder?: string;
+      groupOrder?: string;
+      pipelineSection?: string;
+    }) =>
+      api(`/teams/${teamId}/tasks/${taskId}/reorder`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    onMutate: async ({ taskId, ...data }) => {
+      // Optimistic: move task to new position immediately
+      await qc.cancelQueries({ queryKey });
+      const prev = qc.getQueryData<Task[]>(queryKey);
+      if (prev) {
+        qc.setQueryData<Task[]>(queryKey, prev.map((t) =>
+          t._id === taskId ? { ...t, ...data } : t
+        ).sort((a, b) => {
+          // Sort by section then by the relevant order field
+          if (view === 'group') return a.groupOrder.localeCompare(b.groupOrder);
+          const sectionOrder = { above: 0, below: 1, waiting: 2, someday: 3 };
+          const sa = sectionOrder[a.pipelineSection as keyof typeof sectionOrder] ?? 0;
+          const sb = sectionOrder[b.pipelineSection as keyof typeof sectionOrder] ?? 0;
+          if (sa !== sb) return sa - sb;
+          return a.pipelineOrder.localeCompare(b.pipelineOrder);
+        }));
+      }
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) qc.setQueryData(queryKey, ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ['tasks', teamId] }),
   });
 
   return {
@@ -57,5 +121,6 @@ export function useTasks(view: string, groupId?: string) {
     createTask,
     updateTask,
     deleteTask,
+    reorderTask,
   };
 }
