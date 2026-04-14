@@ -35,9 +35,19 @@ export function TaskRow({ task, rank, showGroup, groups, members, dragListeners,
         setContextMenu(null);
       }
     };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (contextMenu) setContextMenu(null);
+        else if (expanded) setExpanded(false);
+      }
+    };
     document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
-  }, [contextMenu]);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('click', handleClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [contextMenu, expanded]);
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -139,8 +149,8 @@ export function TaskRow({ task, rank, showGroup, groups, members, dragListeners,
             onComplete(task._id);
             setContextMenu(null);
           }}
-          onCancel={() => {
-            onCancel(task._id);
+          onCancel={(reason) => {
+            onCancel(task._id, reason);
             setContextMenu(null);
           }}
           onDelete={() => {

@@ -23,12 +23,13 @@ import { useTeam } from '@/hooks/useTeam';
 import { SortableTaskRow } from '@/components/tasks/SortableTaskRow';
 import { TaskRow } from '@/components/tasks/TaskRow';
 import { TaskInput } from '@/components/tasks/TaskInput';
+import { TaskSkeleton } from '@/components/tasks/TaskSkeleton';
 import { generateKeyBetween } from '@/lib/ordering';
 import type { Task } from '@/types';
 
 export default function GroupPage({ params }: { params: Promise<{ groupId: string }> }) {
   const { groupId } = use(params);
-  const { tasks, createTask, updateTask, deleteTask, reorderTask } = useTasks('group', groupId);
+  const { tasks, isLoading, createTask, updateTask, deleteTask, reorderTask } = useTasks('group', groupId);
   const { groups } = useGroups();
   const { team } = useTeam();
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -44,7 +45,7 @@ export default function GroupPage({ params }: { params: Promise<{ groupId: strin
   const activeTask = activeId ? activeTasks.find((t) => t._id === activeId) : null;
 
   const handleComplete = (taskId: string) => updateTask.mutate({ taskId, status: 'completed' } as any);
-  const handleCancel = (taskId: string) => updateTask.mutate({ taskId, status: 'cancelled' } as any);
+  const handleCancel = (taskId: string, reason?: string) => updateTask.mutate({ taskId, status: 'cancelled', ...(reason ? { cancelReason: reason } : {}) } as any);
   const handleDelete = (taskId: string) => deleteTask.mutate(taskId);
   const handleUpdate = (taskId: string, data: Partial<Task>) => updateTask.mutate({ taskId, ...data } as any);
 
@@ -88,6 +89,9 @@ export default function GroupPage({ params }: { params: Promise<{ groupId: strin
       <div className="flex-1 overflow-y-auto px-7 py-2 pb-10">
         <TaskInput onSubmit={handleAddTask} />
 
+        {isLoading ? (
+          <TaskSkeleton count={4} />
+        ) : (
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -122,6 +126,7 @@ export default function GroupPage({ params }: { params: Promise<{ groupId: strin
             )}
           </DragOverlay>
         </DndContext>
+        )}
 
         {doneTasks.length > 0 && (
           <>

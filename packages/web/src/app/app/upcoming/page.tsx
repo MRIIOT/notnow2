@@ -50,7 +50,7 @@ export default function UpcomingPage() {
   });
 
   const handleComplete = (taskId: string) => updateTask.mutate({ taskId, status: 'completed' } as any);
-  const handleCancel = (taskId: string) => updateTask.mutate({ taskId, status: 'cancelled' } as any);
+  const handleCancel = (taskId: string, reason?: string) => updateTask.mutate({ taskId, status: 'cancelled', ...(reason ? { cancelReason: reason } : {}) } as any);
   const handleDelete = (taskId: string) => deleteTask.mutate(taskId);
   const handleUpdate = (taskId: string, data: Partial<Task>) => updateTask.mutate({ taskId, ...data } as any);
 

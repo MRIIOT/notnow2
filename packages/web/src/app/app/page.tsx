@@ -22,13 +22,14 @@ import { useGroups } from '@/hooks/useGroups';
 import { useTeam } from '@/hooks/useTeam';
 import { SortableTaskRow } from '@/components/tasks/SortableTaskRow';
 import { TaskRow } from '@/components/tasks/TaskRow';
+import { TaskSkeleton, EmptyState } from '@/components/tasks/TaskSkeleton';
 import { generateKeyBetween } from '@/lib/ordering';
 import type { Task } from '@/types';
 
 type Section = 'above' | 'below' | 'waiting' | 'someday';
 
 export default function PipelinePage() {
-  const { tasks, updateTask, deleteTask, reorderTask } = useTasks('pipeline');
+  const { tasks, isLoading, updateTask, deleteTask, reorderTask } = useTasks('pipeline');
   const { groups } = useGroups();
   const { team } = useTeam();
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -102,7 +103,7 @@ export default function PipelinePage() {
   }
 
   const handleComplete = (taskId: string) => updateTask.mutate({ taskId, status: 'completed' } as any);
-  const handleCancel = (taskId: string) => updateTask.mutate({ taskId, status: 'cancelled' } as any);
+  const handleCancel = (taskId: string, reason?: string) => updateTask.mutate({ taskId, status: 'cancelled', ...(reason ? { cancelReason: reason } : {}) } as any);
   const handleDelete = (taskId: string) => deleteTask.mutate(taskId);
   const handleUpdate = (taskId: string, data: Partial<Task>) => updateTask.mutate({ taskId, ...data } as any);
 
@@ -132,6 +133,11 @@ export default function PipelinePage() {
         </h1>
       </div>
       <div className="flex-1 overflow-y-auto px-7 py-2 pb-10">
+        {isLoading ? (
+          <TaskSkeleton count={8} />
+        ) : activeTasks.length === 0 ? (
+          <EmptyState icon="&#9654;" message="No tasks in the pipeline. Add tasks from a group view." />
+        ) : (
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -194,6 +200,7 @@ export default function PipelinePage() {
             )}
           </DragOverlay>
         </DndContext>
+        )}
       </div>
     </>
   );

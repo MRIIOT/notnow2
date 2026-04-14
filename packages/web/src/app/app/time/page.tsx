@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useTeam } from '@/hooks/useTeam';
 import { useTimeSummary } from '@/hooks/useTimeEntries';
+import { useAuthStore } from '@/stores/authStore';
 
 function getMonday(date: Date): Date {
   const d = new Date(date);
@@ -19,6 +20,7 @@ function formatDate(dateStr: string): string {
 
 export default function TimePage() {
   const { team } = useTeam();
+  const teamId = useAuthStore((s) => s.activeTeamId);
   const [weekOffset, setWeekOffset] = useState(0);
 
   const weekOf = useMemo(() => {
@@ -59,8 +61,15 @@ export default function TimePage() {
             >
               &#9654;
             </button>
-            <button className="font-mono text-[11px] px-2.5 py-[4px] bg-bg-raised border border-border rounded text-text-secondary hover:bg-bg-hover hover:text-text transition-all ml-2">
-              Export
+            <button
+              onClick={() => {
+                if (selectedUserId && teamId) {
+                  window.open(`/api/v1/teams/${teamId}/time/export?userId=${selectedUserId}&weekOf=${weekOf}`, '_blank');
+                }
+              }}
+              className="font-mono text-[11px] px-2.5 py-[4px] bg-bg-raised border border-border rounded text-text-secondary hover:bg-bg-hover hover:text-text transition-all ml-2"
+            >
+              Export CSV
             </button>
           </div>
         </div>

@@ -19,9 +19,10 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useGroups } from '@/hooks/useGroups';
+import { useTaskCounts } from '@/hooks/useTaskCounts';
 import type { Group } from '@/types';
 
-function SortableGroupItem({ group, isActive }: { group: Group; isActive: boolean }) {
+function SortableGroupItem({ group, isActive, count }: { group: Group; isActive: boolean; count?: number }) {
   const router = useRouter();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: group._id });
 
@@ -40,6 +41,12 @@ function SortableGroupItem({ group, isActive }: { group: Group; isActive: boolea
         }`}
       >
         <span className="truncate">{group.name}</span>
+        <div className="flex items-center gap-1.5">
+          {count !== undefined && count > 0 && (
+            <span className={`font-mono text-[11px] ${isActive ? 'text-accent opacity-60' : 'text-text-tertiary'}`}>
+              {count}
+            </span>
+          )}
         <span
           className="text-text-tertiary opacity-0 group-hover/item:opacity-50 text-[11px] cursor-grab tracking-wider touch-none"
           {...listeners}
@@ -47,6 +54,7 @@ function SortableGroupItem({ group, isActive }: { group: Group; isActive: boolea
         >
           &#8942;&#8942;
         </span>
+        </div>
       </button>
     </div>
   );
@@ -56,6 +64,7 @@ export function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const { groups, createGroup, reorderGroups } = useGroups();
+  const taskCounts = useTaskCounts();
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState('');
 
@@ -155,6 +164,7 @@ export function Sidebar() {
                 key={g._id}
                 group={g}
                 isActive={pathname === `/app/groups/${g._id}`}
+                count={taskCounts[g._id]}
               />
             ))}
           </SortableContext>
@@ -181,6 +191,22 @@ export function Sidebar() {
             + New group
           </button>
         )}
+      </div>
+
+      <div className="mx-[18px] h-px bg-border my-1.5" />
+
+      <div className="p-3 pt-1.5 pb-3">
+        <button
+          onClick={() => nav('/app/trash')}
+          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-[13px] transition-all ${
+            isActive('/app/trash')
+              ? 'bg-accent-dim text-accent'
+              : 'text-text-tertiary hover:bg-bg-hover hover:text-text-secondary'
+          }`}
+        >
+          <span className="font-mono text-[13px] w-4 text-center">&#9249;</span>
+          Trash
+        </button>
       </div>
     </div>
   );

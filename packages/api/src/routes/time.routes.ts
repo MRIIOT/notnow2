@@ -110,6 +110,59 @@ router.get('/summary', authenticate, authorize(), async (req: Request, res: Resp
   }
 });
 
+// GET /teams/:teamId/time/export
+router.get('/export', authenticate, authorize(), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId, weekOf } = req.query;
+    if (!userId || !weekOf) throw Errors.validation('userId and weekOf are required');
+
+    const start = new Date(weekOf as string);
+    start.setHours(0, 0, 0, 0);
+    const day = start.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    start.setDate(start.getDate() + diff);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 7);
+
+    const entries = await TimeEntry.find({
+      teamId: req.params.teamId,
+      userId,
+      date: { $gte: start, $lt: end },
+    })
+      .sort({ date: 1 })
+      .populate('taskId', 'title')
+      .populate('groupId', 'name');
+
+    const team = await Team.findById(req.params.teamId);
+    const member = team?.members.find((m) => m.userId.toString() === userId);
+
+    const rows = [['Date', 'Group', 'Task', 'Hours', 'Note', 'Rate ($/hr)', 'Amount']];
+    for (const entry of entries) {
+      const group = await Group.findById(entry.groupId);
+      const override = member?.rateOverrides.find((o) => o.groupId.toString() === entry.groupId.toString());
+      const rate = override?.rate ?? member?.defaultRate ?? 0;
+      const taskTitle = (entry.taskId as any)?.title || '';
+      rows.push([
+        new Date(entry.date).toISOString().split('T')[0],
+        group?.name || '',
+        taskTitle,
+        String(entry.hours),
+        entry.note,
+        String(rate / 100),
+        String((entry.hours * rate / 100).toFixed(2)),
+      ]);
+    }
+
+    const csv = rows.map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(',')).join('\n');
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=time-${weekOf}.csv`);
+    res.send(csv);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // PATCH /teams/:teamId/time/:entryId
 router.patch('/:entryId', authenticate, authorize(), async (req: Request, res: Response, next: NextFunction) => {
   try {
