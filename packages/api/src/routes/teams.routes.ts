@@ -11,6 +11,23 @@ import mongoose from 'mongoose';
 
 const router = Router();
 
+// Helper to enrich team with member usernames
+async function enrichTeam(team: any) {
+  const obj = team.toObject ? team.toObject() : { ...team };
+  const userIds = obj.members.map((m: any) => m.userId);
+  const users = await User.find({ _id: { $in: userIds } }).select('username displayName');
+  const userMap = new Map(users.map((u) => [u._id.toString(), u]));
+  obj.members = obj.members.map((m: any) => {
+    const user = userMap.get(m.userId.toString());
+    return { ...m, username: user?.username || 'unknown', displayName: user?.displayName || '' };
+  });
+  return obj;
+}
+
+async function enrichTeams(teams: any[]) {
+  return Promise.all(teams.map(enrichTeam));
+}
+
 // POST /teams - create a team
 router.post('/', authenticate, validate(createTeamSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -44,7 +61,7 @@ router.post('/', authenticate, validate(createTeamSchema), async (req: Request, 
 router.get('/', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const teams = await Team.find({ 'members.userId': req.user!.userId });
-    res.json({ teams });
+    res.json({ teams: await enrichTeams(teams) });
   } catch (err) {
     next(err);
   }
@@ -55,7 +72,7 @@ router.get('/:teamId', authenticate, authorize(), async (req: Request, res: Resp
   try {
     const team = await Team.findById(req.params.teamId);
     if (!team) throw Errors.notFound('Team');
-    res.json({ team });
+    res.json({ team: await enrichTeam(team) });
   } catch (err) {
     next(err);
   }

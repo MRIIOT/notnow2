@@ -7,6 +7,8 @@ export interface User {
 
 export interface TeamMember {
   userId: string;
+  username: string;
+  displayName: string;
   role: 'owner' | 'admin' | 'member';
   timeTrackingEnabled: boolean;
   defaultRate: number;

@@ -200,7 +200,7 @@ export default function TimePage() {
                     : 'text-text-tertiary bg-bg-active border border-transparent hover:text-text-secondary'
                 }`}
               >
-                @{m.userId.slice(-6)}
+                @{m.username}
               </button>
             ))}
           </div>
@@ -218,7 +218,7 @@ export default function TimePage() {
           <>
             {trackedMembers.length <= 1 && (
               <div className="font-mono text-[13px] text-blue mb-4">
-                @{activeUserId?.slice(-6)}
+                @{trackedMembers.find((m) => m.userId === activeUserId)?.username}
               </div>
             )}
 

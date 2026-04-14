@@ -178,7 +178,7 @@ export function TaskDetail({ task, members, onUpdate }: TaskDetailProps) {
                     : 'text-text-tertiary bg-bg-active border border-transparent hover:text-text-secondary'
                 }`}
               >
-                @{m.userId.slice(-6)}
+                @{m.username}
               </button>
             );
           })}

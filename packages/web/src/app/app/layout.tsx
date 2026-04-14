@@ -6,7 +6,9 @@ import { useAuthStore } from '@/stores/authStore';
 import { api } from '@/lib/api';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Topbar } from '@/components/layout/Topbar';
+import { DetailPane } from '@/components/layout/DetailPane';
 import { useSocket } from '@/hooks/useSocket';
+import { useUIStore } from '@/stores/uiStore';
 import type { Team, User } from '@/types';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -60,12 +62,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
+  const selectedTaskId = useUIStore((s) => s.selectedTaskId);
+
   return (
     <div className="h-screen flex flex-col bg-bg">
       <Topbar />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
         <main className="flex-1 flex flex-col overflow-hidden">{children}</main>
+        {selectedTaskId && <DetailPane />}
       </div>
     </div>
   );

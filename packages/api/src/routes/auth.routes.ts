@@ -74,9 +74,10 @@ router.post('/signup', validate(signupSchema), async (req: Request, res: Respons
 router.post('/login', validate(loginSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { emailOrUsername, password } = req.body;
+    const cleaned = emailOrUsername.replace(/^@/, '').toLowerCase();
 
     const user = await User.findOne({
-      $or: [{ email: emailOrUsername.toLowerCase() }, { username: emailOrUsername.toLowerCase() }],
+      $or: [{ email: cleaned }, { username: cleaned }],
     });
     if (!user) throw Errors.unauthorized('Invalid credentials');
 
@@ -149,6 +150,28 @@ router.get('/check-handle/:handle', async (req: Request, res: Response, next: Ne
   try {
     const existing = await Handle.findOne({ handle: req.params.handle.toLowerCase() });
     res.json({ available: !existing });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /auth/change-password
+router.post('/change-password', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) throw Errors.validation('currentPassword and newPassword are required');
+    if (newPassword.length < 6) throw Errors.validation('New password must be at least 6 characters');
+
+    const user = await User.findById(req.user!.userId);
+    if (!user) throw Errors.notFound('User');
+
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!valid) throw Errors.unauthorized('Current password is incorrect');
+
+    user.passwordHash = await bcrypt.hash(newPassword, 12);
+    await user.save();
+
+    res.json({ ok: true });
   } catch (err) {
     next(err);
   }

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTeam } from '@/hooks/useTeam';
 import { useGroups } from '@/hooks/useGroups';
 import { useAuthStore } from '@/stores/authStore';
+import { api } from '@/lib/api';
 
 export default function SettingsPage() {
   const { team, addMember, updateMember, removeMember, updateRates } = useTeam();
@@ -16,6 +17,12 @@ export default function SettingsPage() {
   const [editingRates, setEditingRates] = useState<string | null>(null);
   const [rateDefault, setRateDefault] = useState('');
   const [rateOverrides, setRateOverrides] = useState<{ groupId: string; rate: string }[]>([]);
+
+  // Password state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [pwMsg, setPwMsg] = useState('');
+  const [pwError, setPwError] = useState(false);
 
   if (!team) return <div className="p-7 text-text-tertiary font-mono text-sm">Loading...</div>;
 
@@ -67,10 +74,7 @@ export default function SettingsPage() {
           {team.members.map((m) => (
             <div key={m.userId} className="flex items-center justify-between px-3 py-2 bg-bg-raised border border-border-subtle rounded mb-1.5">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-[12px] text-text">@{m.userId === currentUserId ? 'you' : m.userId.slice(-6)}</span>
-                {m.userId === currentUserId && (
-                  <span className="font-mono text-[10px] text-accent opacity-70">you</span>
-                )}
+                <span className="font-mono text-[12px] text-text">@{m.username}{m.userId === currentUserId ? ' (you)' : ''}</span>
               </div>
               <div className="flex items-center gap-3">
                 <span className="font-mono text-[11px] text-text-tertiary">{m.role}</span>
@@ -113,7 +117,7 @@ export default function SettingsPage() {
           {team.members.map((m) => (
             <div key={m.userId} className="flex items-center justify-between px-3 py-2 bg-bg-raised border border-border-subtle rounded mb-1.5">
               <span className="font-mono text-[12px] text-text">
-                {m.userId === currentUserId ? '@you' : `@${m.userId.slice(-6)}`}
+                @{m.username}
               </span>
               <button
                 onClick={() => updateMember.mutate({ userId: m.userId, timeTrackingEnabled: !m.timeTrackingEnabled })}
@@ -135,7 +139,7 @@ export default function SettingsPage() {
           .map((m) => (
             <div key={m.userId} className="mb-8">
               <div className="font-mono text-[11px] font-semibold uppercase tracking-widest text-text-tertiary mb-3">
-                Rates &mdash; @{m.userId === currentUserId ? 'you' : m.userId.slice(-6)}
+                Rates &mdash; @{m.username}{m.userId === currentUserId ? ' (you)' : ''}
               </div>
 
               {editingRates === m.userId ? (
@@ -234,6 +238,60 @@ export default function SettingsPage() {
               )}
             </div>
           ))}
+
+        {/* Change Password */}
+        <div className="mb-8">
+          <div className="font-mono text-[11px] font-semibold uppercase tracking-widest text-text-tertiary mb-3">
+            Change Password
+          </div>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setPwMsg('');
+              setPwError(false);
+              try {
+                await api('/auth/change-password', {
+                  method: 'POST',
+                  body: JSON.stringify({ currentPassword, newPassword }),
+                });
+                setPwMsg('Password changed');
+                setCurrentPassword('');
+                setNewPassword('');
+              } catch (err: unknown) {
+                setPwError(true);
+                setPwMsg(err instanceof Error ? err.message : 'Failed');
+              }
+            }}
+            className="space-y-2"
+          >
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="Current password"
+              required
+              className="w-full bg-bg border border-border rounded px-2.5 py-[7px] font-mono text-[12px] text-text outline-none focus:border-accent"
+            />
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="New password (min 6 chars)"
+              required
+              minLength={6}
+              className="w-full bg-bg border border-border rounded px-2.5 py-[7px] font-mono text-[12px] text-text outline-none focus:border-accent"
+            />
+            {pwMsg && (
+              <p className={`text-[11px] ${pwError ? 'text-red' : 'text-green'}`}>{pwMsg}</p>
+            )}
+            <button
+              type="submit"
+              className="font-mono text-[11px] bg-accent-dim text-accent border border-accent rounded px-3.5 py-[7px] hover:bg-accent hover:text-bg transition-all"
+            >
+              Update Password
+            </button>
+          </form>
+        </div>
       </div>
     </>
   );
