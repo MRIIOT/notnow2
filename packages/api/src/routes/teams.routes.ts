@@ -11,21 +11,36 @@ import mongoose from 'mongoose';
 
 const router = Router();
 
-// Helper to enrich team with member usernames
-async function enrichTeam(team: any) {
+// Helper to enrich team with member usernames and strip rates by role
+async function enrichTeam(team: any, requestingUserId?: string) {
   const obj = team.toObject ? team.toObject() : { ...team };
   const userIds = obj.members.map((m: any) => m.userId);
   const users = await User.find({ _id: { $in: userIds } }).select('username displayName');
   const userMap = new Map(users.map((u) => [u._id.toString(), u]));
+
+  // Determine requesting user's role
+  const requestingMember = requestingUserId
+    ? obj.members.find((m: any) => m.userId.toString() === requestingUserId)
+    : null;
+  const isAdmin = requestingMember && (requestingMember.role === 'admin' || requestingMember.role === 'owner');
+
   obj.members = obj.members.map((m: any) => {
     const user = userMap.get(m.userId.toString());
-    return { ...m, username: user?.username || 'unknown', displayName: user?.displayName || '' };
+    const enriched = { ...m, username: user?.username || 'unknown', displayName: user?.displayName || '' };
+
+    // Non-admins can only see their own rates
+    if (!isAdmin && m.userId.toString() !== requestingUserId) {
+      enriched.defaultRate = undefined;
+      enriched.rateOverrides = undefined;
+    }
+
+    return enriched;
   });
   return obj;
 }
 
-async function enrichTeams(teams: any[]) {
-  return Promise.all(teams.map(enrichTeam));
+async function enrichTeams(teams: any[], requestingUserId?: string) {
+  return Promise.all(teams.map((t) => enrichTeam(t, requestingUserId)));
 }
 
 // POST /teams - create a team
@@ -61,7 +76,7 @@ router.post('/', authenticate, validate(createTeamSchema), async (req: Request, 
 router.get('/', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const teams = await Team.find({ 'members.userId': req.user!.userId });
-    res.json({ teams: await enrichTeams(teams) });
+    res.json({ teams: await enrichTeams(teams, req.user!.userId) });
   } catch (err) {
     next(err);
   }
@@ -72,7 +87,7 @@ router.get('/:teamId', authenticate, authorize(), async (req: Request, res: Resp
   try {
     const team = await Team.findById(req.params.teamId);
     if (!team) throw Errors.notFound('Team');
-    res.json({ team: await enrichTeam(team) });
+    res.json({ team: await enrichTeam(team, req.user!.userId) });
   } catch (err) {
     next(err);
   }

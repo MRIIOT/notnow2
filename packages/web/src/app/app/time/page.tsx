@@ -48,12 +48,16 @@ export default function TimePage() {
     return `Week of ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
   }, [weekOf]);
 
+  const currentMember = team?.members.find((m) => m.userId === currentUserId);
+  const isAdmin = currentMember?.role === 'admin' || currentMember?.role === 'owner';
   const trackedMembers = team?.members.filter((m) => m.timeTrackingEnabled) || [];
+  // Non-admins can only see their own time
+  const visibleMembers = isAdmin ? trackedMembers : trackedMembers.filter((m) => m.userId === currentUserId);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const activeUserId = selectedUserId || trackedMembers[0]?.userId || null;
+  const activeUserId = selectedUserId || visibleMembers[0]?.userId || null;
 
   // Check if current user has time tracking enabled
-  const currentUserTracked = team?.members.find((m) => m.userId === currentUserId)?.timeTrackingEnabled;
+  const currentUserTracked = currentMember?.timeTrackingEnabled;
 
   const { data: summary, isLoading } = useTimeSummary(activeUserId, weekOf);
 
@@ -187,10 +191,10 @@ export default function TimePage() {
           </div>
         )}
 
-        {/* Member selector */}
-        {trackedMembers.length > 1 && (
+        {/* Member selector - only show if admin with multiple members */}
+        {visibleMembers.length > 1 && (
           <div className="flex items-center gap-2 mb-4">
-            {trackedMembers.map((m) => (
+            {visibleMembers.map((m) => (
               <button
                 key={m.userId}
                 onClick={() => setSelectedUserId(m.userId)}
@@ -206,7 +210,7 @@ export default function TimePage() {
           </div>
         )}
 
-        {trackedMembers.length === 0 ? (
+        {visibleMembers.length === 0 ? (
           <p className="text-text-tertiary text-[13px] italic">
             No team members have time tracking enabled. Enable it in Settings.
           </p>
@@ -216,7 +220,7 @@ export default function TimePage() {
           <p className="text-text-tertiary text-[13px] italic">No time entries this week.</p>
         ) : (
           <>
-            {trackedMembers.length <= 1 && (
+            {visibleMembers.length <= 1 && (
               <div className="font-mono text-[13px] text-blue mb-4">
                 @{trackedMembers.find((m) => m.userId === activeUserId)?.username}
               </div>
@@ -226,7 +230,7 @@ export default function TimePage() {
               <div key={i} className="mb-5">
                 <div className="flex items-center justify-between py-2 border-b border-border-subtle mb-1">
                   <span className="font-mono text-[12px] text-text-secondary font-medium">{g.groupName}</span>
-                  <span className="font-mono text-[11px] text-text-tertiary">${(g.rate / 100).toFixed(0)}/hr</span>
+                  {isAdmin && <span className="font-mono text-[11px] text-text-tertiary">${(g.rate / 100).toFixed(0)}/hr</span>}
                 </div>
 
                 {g.entries.map((entry) => (
@@ -254,14 +258,14 @@ export default function TimePage() {
                   <span className="text-text-secondary">{g.groupName}</span>
                   <div className="flex items-center gap-3">
                     <span className="text-accent min-w-[50px] text-right">{g.hours}h</span>
-                    <span className="text-text-tertiary min-w-[60px] text-right">&times; ${(g.rate / 100).toFixed(0)}</span>
-                    <span className="text-text min-w-[70px] text-right">${(g.hours * g.rate / 100).toFixed(2)}</span>
+                    {isAdmin && <span className="text-text-tertiary min-w-[60px] text-right">&times; ${(g.rate / 100).toFixed(0)}</span>}
+                    {isAdmin && <span className="text-text min-w-[70px] text-right">${(g.hours * g.rate / 100).toFixed(2)}</span>}
                   </div>
                 </div>
               ))}
               <div className="flex items-center justify-end gap-3 px-2 pt-2.5 mt-1.5 border-t border-border font-mono text-[14px] font-semibold text-accent">
                 <span>{summary.totalHours}h</span>
-                <span>${(summary.totalAmount / 100).toFixed(2)}</span>
+                {isAdmin && <span>${(summary.totalAmount / 100).toFixed(2)}</span>}
               </div>
             </div>
           </>

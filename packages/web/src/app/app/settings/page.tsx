@@ -10,6 +10,8 @@ export default function SettingsPage() {
   const { team, addMember, updateMember, removeMember, updateRates } = useTeam();
   const { groups } = useGroups();
   const currentUserId = useAuthStore((s) => s.user?.id);
+  const currentMember = team?.members.find((m) => m.userId === currentUserId);
+  const isAdmin = currentMember?.role === 'admin' || currentMember?.role === 'owner';
   const [newUsername, setNewUsername] = useState('');
   const [addError, setAddError] = useState('');
 
@@ -78,7 +80,7 @@ export default function SettingsPage() {
               </div>
               <div className="flex items-center gap-3">
                 <span className="font-mono text-[11px] text-text-tertiary">{m.role}</span>
-                {m.userId !== currentUserId && m.role !== 'owner' && (
+                {isAdmin && m.userId !== currentUserId && m.role !== 'owner' && (
                   <button
                     onClick={() => removeMember.mutate(m.userId)}
                     className="font-mono text-[10px] text-text-tertiary hover:text-red transition-colors"
@@ -90,23 +92,27 @@ export default function SettingsPage() {
             </div>
           ))}
 
-          <form onSubmit={handleAddMember} className="flex items-center gap-2 mt-2">
-            <input
-              type="text"
-              value={newUsername}
-              onChange={(e) => setNewUsername(e.target.value)}
-              placeholder="@username"
-              className="flex-1 bg-bg border border-border rounded px-2.5 py-[7px] font-mono text-[12px] text-text outline-none focus:border-accent"
-            />
-            <button
-              type="submit"
-              className="font-mono text-[11px] bg-accent-dim text-accent border border-accent rounded px-3.5 py-[7px] hover:bg-accent hover:text-bg transition-all"
-            >
-              Add
-            </button>
-          </form>
-          {addError && <p className="text-red text-[11px] mt-1">{addError}</p>}
-          <p className="text-[11px] text-text-tertiary mt-1 italic">User must have a notnow account.</p>
+          {isAdmin && (
+            <>
+              <form onSubmit={handleAddMember} className="flex items-center gap-2 mt-2">
+                <input
+                  type="text"
+                  value={newUsername}
+                  onChange={(e) => setNewUsername(e.target.value)}
+                  placeholder="@username"
+                  className="flex-1 bg-bg border border-border rounded px-2.5 py-[7px] font-mono text-[12px] text-text outline-none focus:border-accent"
+                />
+                <button
+                  type="submit"
+                  className="font-mono text-[11px] bg-accent-dim text-accent border border-accent rounded px-3.5 py-[7px] hover:bg-accent hover:text-bg transition-all"
+                >
+                  Add
+                </button>
+              </form>
+              {addError && <p className="text-red text-[11px] mt-1">{addError}</p>}
+              <p className="text-[11px] text-text-tertiary mt-1 italic">User must have a notnow account.</p>
+            </>
+          )}
         </div>
 
         {/* Time Tracking */}
@@ -120,12 +126,13 @@ export default function SettingsPage() {
                 @{m.username}
               </span>
               <button
-                onClick={() => updateMember.mutate({ userId: m.userId, timeTrackingEnabled: !m.timeTrackingEnabled })}
+                onClick={() => isAdmin && updateMember.mutate({ userId: m.userId, timeTrackingEnabled: !m.timeTrackingEnabled })}
+                disabled={!isAdmin}
                 className={`font-mono text-[11px] px-2.5 py-[3px] rounded border transition-all ${
                   m.timeTrackingEnabled
                     ? 'text-green bg-green-dim border-green'
                     : 'text-text-tertiary bg-bg border-border'
-                }`}
+                } ${!isAdmin ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {m.timeTrackingEnabled ? 'on' : 'off'}
               </button>
@@ -133,8 +140,8 @@ export default function SettingsPage() {
           ))}
         </div>
 
-        {/* Rates */}
-        {team.members
+        {/* Rates - admin only */}
+        {isAdmin && team.members
           .filter((m) => m.timeTrackingEnabled)
           .map((m) => (
             <div key={m.userId} className="mb-8">
