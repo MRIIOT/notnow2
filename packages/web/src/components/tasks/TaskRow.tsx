@@ -77,6 +77,15 @@ export function TaskRow({ task, rank, showGroup, groups, members, dragListeners,
       <span className={`flex-1 text-[13px] leading-snug truncate ${isCompleted ? 'line-through text-text-tertiary' : 'text-text'}`}>
         {task.title}
       </span>
+      {task.subtasks.length > 0 && (
+        <span className={`font-mono text-[9px] shrink-0 border rounded-full w-[30px] h-[16px] flex items-center justify-center ${
+          task.subtasks.every((s) => s.completed)
+            ? 'text-green border-green bg-green-dim'
+            : 'text-text-tertiary border-border'
+        }`}>
+          {task.subtasks.filter((s) => s.completed).length}/{task.subtasks.length}
+        </span>
+      )}
       <div className="flex items-center gap-2 shrink-0">
         {task.assignees.map((uid) => {
           const member = members?.find((m) => m.userId === uid);
