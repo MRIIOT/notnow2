@@ -40,17 +40,23 @@ export function Topbar() {
     }
   };
 
+  const [createLoading, setCreateLoading] = useState(false);
+
   const onCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreateError('');
+    setCreateLoading(true);
     try {
       await createTeam(newHandle, newDisplayName || newHandle);
       setNewHandle('');
       setNewDisplayName('');
+      setHandleAvailable(null);
       setCreating(false);
       setDropdownOpen(false);
     } catch (err: unknown) {
-      setCreateError(err instanceof Error ? err.message : 'Failed');
+      setCreateError(err instanceof Error ? err.message : 'Failed to create team');
+    } finally {
+      setCreateLoading(false);
     }
   };
 
@@ -121,10 +127,10 @@ export function Topbar() {
                   <div className="flex gap-1.5">
                     <button
                       type="submit"
-                      disabled={handleAvailable === false || newHandle.length < 3}
+                      disabled={handleAvailable === false || newHandle.length < 3 || createLoading}
                       className="font-mono text-[10px] bg-accent text-bg px-2.5 py-1 rounded hover:bg-accent-hover transition-colors disabled:opacity-50"
                     >
-                      Create
+                      {createLoading ? 'Creating...' : 'Create'}
                     </button>
                     <button
                       type="button"
