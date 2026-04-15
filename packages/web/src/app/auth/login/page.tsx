@@ -34,9 +34,7 @@ export default function LoginPage() {
 
   return (
     <div className="bg-bg-surface border border-border rounded-lg p-9 w-[380px] max-w-[90vw]">
-      <div className="font-mono font-bold text-[22px] text-text">
-        notnow<span className="text-text-tertiary">.</span>
-      </div>
+      <img src="/logo.png" alt="notnow" className="w-10 h-10 rounded mb-1" />
       <p className="text-[13px] text-text-secondary mb-7">Welcome back.</p>
 
       <form onSubmit={onSubmit}>

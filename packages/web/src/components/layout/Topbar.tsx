@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import { useAuthStore } from '@/stores/authStore';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -63,9 +64,7 @@ export function Topbar() {
   return (
     <div className="h-11 bg-bg border-b border-border flex items-center justify-between px-4 shrink-0 z-10">
       <div className="flex items-center gap-3">
-        <span className="font-mono font-bold text-[15px] text-text tracking-tight">
-          notnow<span className="text-text-tertiary">.</span>
-        </span>
+        <Image src="/logo.png" alt="notnow" width={28} height={28} className="rounded" />
 
         <div className="relative" ref={dropdownRef}>
           <button
