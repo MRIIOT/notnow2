@@ -32,9 +32,11 @@ body {
   color: var(--color-text);
 }
 
-/* Prevent iOS Chrome zoom on input focus */
-input, select, textarea {
-  font-size: 16px !important;
+/* Prevent iOS Chrome zoom on input focus — mobile only */
+@media (max-width: 767px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
 }
 
 /* Scrollbar */
