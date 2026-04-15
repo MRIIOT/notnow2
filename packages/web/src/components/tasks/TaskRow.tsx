@@ -35,13 +35,13 @@ export function TaskRow({ task, rank, showGroup, groups, members, dragListeners,
 
   return (
     <li
-      className={`flex items-center gap-2.5 rounded cursor-pointer transition-colors group relative px-2 py-[7px] ${
+      className={`flex items-center gap-2.5 rounded cursor-pointer transition-colors group relative px-2 py-2.5 md:py-[7px] ${
         isSelected ? 'bg-accent-dim' : 'hover:bg-bg-hover'
       }`}
       onClick={() => selectTask(isSelected ? null : task._id)}
     >
       <span
-        className="text-text-tertiary opacity-0 group-hover:opacity-50 text-[11px] cursor-grab shrink-0 tracking-wider touch-none"
+        className="text-text-tertiary opacity-0 group-hover:opacity-50 text-[11px] cursor-grab shrink-0 tracking-wider touch-none hidden md:inline"
         {...(dragListeners || {})}
         onClick={(e) => e.stopPropagation()}
       >
@@ -61,7 +61,7 @@ export function TaskRow({ task, rank, showGroup, groups, members, dragListeners,
             onComplete(task._id);
           }
         }}
-        className={`w-4 h-4 border-[1.5px] rounded-[3px] shrink-0 transition-all relative ${
+        className={`w-5 h-5 md:w-4 md:h-4 border-[1.5px] rounded-[3px] shrink-0 transition-all relative ${
           isCompleted ? 'bg-green border-green' : 'border-text-tertiary hover:border-accent'
         }`}
       >
@@ -74,7 +74,7 @@ export function TaskRow({ task, rank, showGroup, groups, members, dragListeners,
           {group.name}
         </span>
       )}
-      <span className={`flex-1 text-[13px] leading-snug truncate ${isCompleted ? 'line-through text-text-tertiary' : 'text-text'}`}>
+      <span className={`flex-1 text-[15px] md:text-[13px] leading-snug truncate ${isCompleted ? 'line-through text-text-tertiary' : 'text-text'}`}>
         {task.title}
       </span>
       {task.subtasks.length > 0 && (

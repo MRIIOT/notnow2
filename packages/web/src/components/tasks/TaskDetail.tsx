@@ -61,6 +61,29 @@ export function TaskDetail({ task, members, onUpdate }: TaskDetailProps) {
   return (
     <div className="mt-3 pt-3 border-t border-border w-full" onClick={(e) => e.stopPropagation()}>
 
+      {/* Pipeline section */}
+      <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+        <span className="font-mono text-[10px] uppercase tracking-wider text-text-tertiary">Section:</span>
+        {(['waiting', 'above', 'below', 'someday'] as const).map((section) => {
+          const labels: Record<string, string> = { waiting: 'Waiting', above: 'Active', below: 'Below', someday: 'Someday' };
+          return (
+            <button
+              key={section}
+              onClick={() => onUpdate(task._id, { pipelineSection: section } as any)}
+              className={`font-mono text-[11px] md:text-[10px] px-2 py-[3px] md:py-[2px] rounded transition-all ${
+                task.pipelineSection === section
+                  ? section === 'waiting' ? 'text-blue bg-blue-dim border border-blue'
+                    : section === 'someday' ? 'text-text-tertiary bg-bg-active border border-text-tertiary'
+                    : 'text-accent bg-accent-dim border border-accent'
+                  : 'text-text-tertiary bg-bg-active border border-transparent hover:text-text-secondary'
+              }`}
+            >
+              {labels[section]}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Meta chips */}
       <div className="flex items-center gap-3 mb-3 flex-wrap">
         <div className="flex items-center gap-1.5">
@@ -137,10 +160,10 @@ export function TaskDetail({ task, members, onUpdate }: TaskDetailProps) {
         <div className="font-mono text-[10px] uppercase tracking-wider text-text-tertiary mb-1.5">Subtasks</div>
         {task.subtasks.map((sub) => (
           <SwipeToDelete key={sub._id} onDelete={() => deleteSubtask(sub._id)}>
-            <div className="flex items-center gap-2 py-1 text-[13px] text-text-secondary group/sub">
+            <div className="flex items-center gap-2 py-2 md:py-1 text-[15px] md:text-[13px] text-text-secondary group/sub">
               <button
                 onClick={() => toggleSubtask(sub._id, sub.completed)}
-                className={`w-3.5 h-3.5 border-[1.5px] rounded-[3px] shrink-0 relative transition-all ${
+                className={`w-5 h-5 md:w-3.5 md:h-3.5 border-[1.5px] rounded-[3px] shrink-0 relative transition-all ${
                   sub.completed ? 'bg-green border-green' : 'border-text-tertiary hover:border-accent'
                 }`}
               >
