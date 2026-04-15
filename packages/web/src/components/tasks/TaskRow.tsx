@@ -73,9 +73,7 @@ export function TaskRow({ task, rank, showGroup, groups, members, dragListeners,
         {task.title}
       </span>
       <div className="flex items-center gap-2 shrink-0">
-        {task.reminders.some((r) => !r.sent) && (
-          <span className="text-[11px] text-orange" title="Reminder set">&#128276;</span>
-        )}
+
         {task.assignees.map((uid) => {
           const member = members?.find((m) => m.userId === uid);
           return (

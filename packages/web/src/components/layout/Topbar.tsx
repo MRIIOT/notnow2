@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { useAuth } from '@/hooks/useAuth';
-import { NotificationBell } from './NotificationBell';
 
 export function Topbar() {
   const { user, teams, activeTeamId, setActiveTeam } = useAuthStore();
@@ -159,7 +158,6 @@ export function Topbar() {
       </div>
 
       <div className="flex items-center gap-2.5">
-        <NotificationBell />
         <button
           onClick={logout}
           className="font-mono text-[11px] text-text-tertiary hover:text-text-secondary px-2 py-1 rounded hover:bg-bg-hover transition-all"

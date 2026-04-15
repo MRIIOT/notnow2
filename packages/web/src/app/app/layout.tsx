@@ -7,7 +7,7 @@ import { api } from '@/lib/api';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Topbar } from '@/components/layout/Topbar';
 import { DetailPane } from '@/components/layout/DetailPane';
-import { useSocket } from '@/hooks/useSocket';
+
 import { useUIStore } from '@/stores/uiStore';
 import type { Team, User } from '@/types';
 
@@ -17,8 +17,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [ready, setReady] = useState(false);
 
-  // Real-time socket connection
-  useSocket();
 
   useEffect(() => {
     async function init() {

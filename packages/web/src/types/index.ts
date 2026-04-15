@@ -48,7 +48,7 @@ export interface Task {
   groupOrder: string;
   assignees: string[];
   dueDate: string | null;
-  reminders: { date: string; sent: boolean }[];
+
   subtasks: Subtask[];
   createdBy: string;
   completedAt: string | null;
