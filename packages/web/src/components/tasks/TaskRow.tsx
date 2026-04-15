@@ -69,11 +69,15 @@ export function TaskRow({ task, rank, showGroup, groups, members, dragListeners,
           <span className="absolute -top-[1px] left-[2px] text-[11px] text-white font-bold">&#10003;</span>
         )}
       </button>
+      {showGroup && group && (
+        <span className="font-mono text-[10px] tracking-wide px-[7px] py-[2px] rounded-[3px] bg-bg-active text-text-secondary shrink-0">
+          {group.name}
+        </span>
+      )}
       <span className={`flex-1 text-[13px] leading-snug truncate ${isCompleted ? 'line-through text-text-tertiary' : 'text-text'}`}>
         {task.title}
       </span>
       <div className="flex items-center gap-2 shrink-0">
-
         {task.assignees.map((uid) => {
           const member = members?.find((m) => m.userId === uid);
           return (
@@ -85,11 +89,6 @@ export function TaskRow({ task, rank, showGroup, groups, members, dragListeners,
         {task.dueDate && !isCompleted && (
           <span className="font-mono text-[11px] text-text-tertiary">
             {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-          </span>
-        )}
-        {showGroup && group && (
-          <span className="font-mono text-[10px] tracking-wide px-[7px] py-[2px] rounded-[3px] bg-bg-active text-text-secondary">
-            {group.name}
           </span>
         )}
         {isCompleted && (
