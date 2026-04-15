@@ -148,7 +148,7 @@ router.get('/me', authenticate, async (req: Request, res: Response, next: NextFu
 // GET /auth/check-handle/:handle
 router.get('/check-handle/:handle', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const existing = await Handle.findOne({ handle: req.params.handle.toLowerCase() });
+    const existing = await Handle.findOne({ handle: (req.params.handle as string).toLowerCase() });
     res.json({ available: !existing });
   } catch (err) {
     next(err);

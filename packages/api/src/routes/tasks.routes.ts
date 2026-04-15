@@ -50,7 +50,7 @@ router.post('/', authenticate, authorize(), validate(createTaskSchema), async (r
     });
 
     res.status(201).json({ task });
-    emitTeamEvent(req.app.locals.io, req.params.teamId, 'task:created', { task });
+    emitTeamEvent(req.app.locals.io, req.params.teamId as string, 'task:created', { task });
   } catch (err) {
     next(err);
   }
@@ -59,7 +59,9 @@ router.post('/', authenticate, authorize(), validate(createTaskSchema), async (r
 // GET /teams/:teamId/tasks
 router.get('/', authenticate, authorize(), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { view, groupId, status } = req.query;
+    const view = req.query.view as string | undefined;
+    const groupId = req.query.groupId as string | undefined;
+    const status = req.query.status as string | undefined;
     const filter: Record<string, unknown> = { teamId: req.params.teamId };
 
     if (status) {
@@ -120,7 +122,7 @@ router.patch('/:taskId', authenticate, authorize(), validate(updateTaskSchema), 
     await task.save();
 
     res.json({ task });
-    emitTeamEvent(req.app.locals.io, req.params.teamId, 'task:updated', { task });
+    emitTeamEvent(req.app.locals.io, req.params.teamId as string, 'task:updated', { task });
   } catch (err) {
     next(err);
   }
@@ -137,7 +139,7 @@ router.delete('/:taskId', authenticate, authorize(), async (req: Request, res: R
     await task.save();
 
     res.json({ ok: true });
-    emitTeamEvent(req.app.locals.io, req.params.teamId, 'task:deleted', { taskId: req.params.taskId });
+    emitTeamEvent(req.app.locals.io, req.params.teamId as string, 'task:deleted', { taskId: req.params.taskId });
   } catch (err) {
     next(err);
   }
@@ -160,7 +162,7 @@ router.post(
 
       await task.save();
       res.json({ task });
-      emitTeamEvent(req.app.locals.io, req.params.teamId, 'task:reordered', { task });
+      emitTeamEvent(req.app.locals.io, req.params.teamId as string, 'task:reordered', { task });
     } catch (err) {
       next(err);
     }
