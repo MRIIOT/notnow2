@@ -20,9 +20,11 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useGroups } from '@/hooks/useGroups';
 import { useTaskCounts } from '@/hooks/useTaskCounts';
+import { useTeam } from '@/hooks/useTeam';
+import { useAuthStore } from '@/stores/authStore';
 import type { Group } from '@/types';
 
-function SortableGroupItem({ group, isActive, count }: { group: Group; isActive: boolean; count?: number }) {
+function SortableGroupItem({ group, isActive, count, onDelete }: { group: Group; isActive: boolean; count?: number; onDelete?: () => void }) {
   const router = useRouter();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: group._id });
 
@@ -47,13 +49,21 @@ function SortableGroupItem({ group, isActive, count }: { group: Group; isActive:
               {count}
             </span>
           )}
-        <span
-          className="text-text-tertiary opacity-0 group-hover/item:opacity-50 text-[11px] cursor-grab tracking-wider touch-none"
-          {...listeners}
-          onClick={(e) => e.stopPropagation()}
-        >
-          &#8942;&#8942;
-        </span>
+          {(!count || count === 0) && onDelete && (
+            <span
+              className="font-mono text-[10px] text-text-tertiary opacity-0 group-hover/item:opacity-50 hover:!opacity-100 hover:!text-red transition-all cursor-pointer"
+              onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            >
+              &#10005;
+            </span>
+          )}
+          <span
+            className="text-text-tertiary opacity-0 group-hover/item:opacity-50 text-[11px] cursor-grab tracking-wider touch-none"
+            {...listeners}
+            onClick={(e) => e.stopPropagation()}
+          >
+            &#8942;&#8942;
+          </span>
         </div>
       </button>
     </div>
@@ -63,8 +73,12 @@ function SortableGroupItem({ group, isActive, count }: { group: Group; isActive:
 export function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { groups, createGroup, reorderGroups } = useGroups();
+  const { groups, createGroup, reorderGroups, deleteGroup } = useGroups();
   const taskCounts = useTaskCounts();
+  const { team } = useTeam();
+  const currentUserId = useAuthStore((s) => s.user?.id);
+  const currentRole = team?.members.find((m) => m.userId === currentUserId)?.role;
+  const isAdmin = currentRole === 'admin' || currentRole === 'owner';
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState('');
 
@@ -165,6 +179,7 @@ export function Sidebar() {
                 group={g}
                 isActive={pathname === `/app/groups/${g._id}`}
                 count={taskCounts[g._id]}
+                onDelete={isAdmin ? () => deleteGroup.mutate(g._id) : undefined}
               />
             ))}
           </SortableContext>

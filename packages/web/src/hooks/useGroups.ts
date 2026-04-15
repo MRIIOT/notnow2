@@ -48,5 +48,11 @@ export function useGroups() {
     onSettled: () => qc.invalidateQueries({ queryKey }),
   });
 
-  return { groups: query.data || [], isLoading: query.isLoading, createGroup, reorderGroups };
+  const deleteGroup = useMutation({
+    mutationFn: (groupId: string) =>
+      api(`/teams/${teamId}/groups/${groupId}`, { method: 'DELETE' }),
+    onSuccess: () => qc.invalidateQueries({ queryKey }),
+  });
+
+  return { groups: query.data || [], isLoading: query.isLoading, createGroup, reorderGroups, deleteGroup };
 }

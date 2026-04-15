@@ -1,5 +1,6 @@
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import { Group } from '../models/Group.js';
+import { Task } from '../models/Task.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { authorize } from '../middleware/authorize.js';
 import { validate } from '../middleware/validate.js';
@@ -53,6 +54,9 @@ router.patch('/:groupId', authenticate, authorize(), validate(updateGroupSchema)
 // DELETE /teams/:teamId/groups/:groupId
 router.delete('/:groupId', authenticate, authorize('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const activeCount = await Task.countDocuments({ groupId: req.params.groupId, status: 'active' });
+    if (activeCount > 0) throw Errors.conflict('Cannot delete a group with active tasks');
+
     const group = await Group.findOneAndDelete({ _id: req.params.groupId, teamId: req.params.teamId });
     if (!group) throw Errors.notFound('Group');
     res.json({ ok: true });
