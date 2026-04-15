@@ -18,19 +18,30 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function init() {
       if (!user) {
-        // Try to restore session via refresh
+        // Try to restore session via refresh token in localStorage
         try {
-          const refreshRes = await fetch(`${API_URL}/api/v1/auth/refresh`, { method: 'POST', credentials: 'include' });
-          if (!refreshRes.ok) {
+          const storedRefresh = localStorage.getItem('refreshToken');
+          if (!storedRefresh) {
             router.replace('/auth/login');
             return;
           }
-          const { accessToken } = await refreshRes.json();
-          // Set token first so api() can use it for the /me call
+          const refreshRes = await fetch(`${API_URL}/api/v1/auth/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken: storedRefresh }),
+          });
+          if (!refreshRes.ok) {
+            localStorage.removeItem('refreshToken');
+            router.replace('/auth/login');
+            return;
+          }
+          const { accessToken, refreshToken: newRefresh } = await refreshRes.json();
+          localStorage.setItem('refreshToken', newRefresh);
           useAuthStore.getState().setToken(accessToken);
           const meRes = await api<{ user: User }>('/auth/me');
           setAuth(meRes.user, accessToken);
         } catch {
+          localStorage.removeItem('refreshToken');
           router.replace('/auth/login');
           return;
         }

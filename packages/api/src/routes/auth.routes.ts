@@ -18,22 +18,11 @@ function signAccessToken(userId: string, username: string): string {
   return jwt.sign({ userId, username }, env.JWT_SECRET, { expiresIn: '15m' });
 }
 
-async function createRefreshToken(userId: string): Promise<string> {
+async function createRefreshTokenValue(userId: string): Promise<string> {
   const token = crypto.randomBytes(40).toString('hex');
   const expiresAt = new Date(Date.now() + REFRESH_TOKEN_DAYS * 24 * 60 * 60 * 1000);
   await RefreshToken.create({ token, userId, expiresAt });
   return token;
-}
-
-function setRefreshCookie(res: Response, token: string) {
-  const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
-  res.cookie('refreshToken', token, {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax',
-    maxAge: REFRESH_TOKEN_DAYS * 24 * 60 * 60 * 1000,
-    path: '/',
-  });
 }
 
 // POST /auth/signup
@@ -41,7 +30,6 @@ router.post('/signup', validate(signupSchema), async (req: Request, res: Respons
   try {
     const { username, email, password, displayName } = req.body;
 
-    // Check handle availability
     const existing = await Handle.findOne({ handle: username });
     if (existing) throw Errors.handleTaken();
 
@@ -59,12 +47,12 @@ router.post('/signup', validate(signupSchema), async (req: Request, res: Respons
     await Handle.create({ handle: username, type: 'user', refId: user._id });
 
     const accessToken = signAccessToken(user._id.toString(), user.username);
-    const refreshToken = await createRefreshToken(user._id.toString());
-    setRefreshCookie(res, refreshToken);
+    const refreshToken = await createRefreshTokenValue(user._id.toString());
 
     res.status(201).json({
       user: { id: user._id, username: user.username, email: user.email, displayName: user.displayName },
       accessToken,
+      refreshToken,
     });
   } catch (err) {
     next(err);
@@ -86,12 +74,12 @@ router.post('/login', validate(loginSchema), async (req: Request, res: Response,
     if (!valid) throw Errors.unauthorized('Invalid credentials');
 
     const accessToken = signAccessToken(user._id.toString(), user.username);
-    const refreshToken = await createRefreshToken(user._id.toString());
-    setRefreshCookie(res, refreshToken);
+    const refreshToken = await createRefreshTokenValue(user._id.toString());
 
     res.json({
       user: { id: user._id, username: user.username, email: user.email, displayName: user.displayName },
       accessToken,
+      refreshToken,
     });
   } catch (err) {
     next(err);
@@ -101,10 +89,10 @@ router.post('/login', validate(loginSchema), async (req: Request, res: Response,
 // POST /auth/refresh
 router.post('/refresh', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const token = req.cookies?.refreshToken;
-    if (!token) throw Errors.unauthorized('No refresh token');
+    const { refreshToken } = req.body;
+    if (!refreshToken) throw Errors.unauthorized('No refresh token');
 
-    const stored = await RefreshToken.findOneAndDelete({ token });
+    const stored = await RefreshToken.findOneAndDelete({ token: refreshToken });
     if (!stored) throw Errors.unauthorized('Invalid refresh token');
     if (stored.expiresAt < new Date()) throw Errors.unauthorized('Refresh token expired');
 
@@ -112,10 +100,9 @@ router.post('/refresh', async (req: Request, res: Response, next: NextFunction) 
     if (!user) throw Errors.unauthorized('User not found');
 
     const accessToken = signAccessToken(user._id.toString(), user.username);
-    const newRefreshToken = await createRefreshToken(user._id.toString());
-    setRefreshCookie(res, newRefreshToken);
+    const newRefreshToken = await createRefreshTokenValue(user._id.toString());
 
-    res.json({ accessToken });
+    res.json({ accessToken, refreshToken: newRefreshToken });
   } catch (err) {
     next(err);
   }
@@ -124,11 +111,10 @@ router.post('/refresh', async (req: Request, res: Response, next: NextFunction) 
 // POST /auth/logout
 router.post('/logout', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const token = req.cookies?.refreshToken;
-    if (token) {
-      await RefreshToken.deleteOne({ token });
+    const { refreshToken } = req.body;
+    if (refreshToken) {
+      await RefreshToken.deleteOne({ token: refreshToken });
     }
-    res.clearCookie('refreshToken', { path: '/' });
     res.json({ ok: true });
   } catch (err) {
     next(err);

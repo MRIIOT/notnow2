@@ -12,11 +12,12 @@ export function useAuth() {
 
   const signup = useCallback(
     async (username: string, email: string, password: string) => {
-      const data = await api<{ user: User; accessToken: string }>('/auth/signup', {
+      const data = await api<{ user: User; accessToken: string; refreshToken: string }>('/auth/signup', {
         method: 'POST',
         body: JSON.stringify({ username, email, password }),
       });
       setAuth(data.user, data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
       return data.user;
     },
     [setAuth],
@@ -24,18 +25,24 @@ export function useAuth() {
 
   const login = useCallback(
     async (emailOrUsername: string, password: string) => {
-      const data = await api<{ user: User; accessToken: string }>('/auth/login', {
+      const data = await api<{ user: User; accessToken: string; refreshToken: string }>('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ emailOrUsername, password }),
       });
       setAuth(data.user, data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
       return data.user;
     },
     [setAuth],
   );
 
   const logout = useCallback(async () => {
-    await api('/auth/logout', { method: 'POST' }).catch(() => {});
+    const refreshToken = localStorage.getItem('refreshToken');
+    await api('/auth/logout', {
+      method: 'POST',
+      body: JSON.stringify({ refreshToken }),
+    }).catch(() => {});
+    localStorage.removeItem('refreshToken');
     clearAuth();
     router.push('/auth/login');
   }, [clearAuth, router]);

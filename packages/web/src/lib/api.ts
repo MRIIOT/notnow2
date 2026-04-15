@@ -5,10 +5,21 @@ const BASE = `${API_URL}/api/v1`;
 
 async function refreshToken(): Promise<string | null> {
   try {
-    const res = await fetch(`${BASE}/auth/refresh`, { method: 'POST', credentials: 'include' });
-    if (!res.ok) return null;
+    const stored = localStorage.getItem('refreshToken');
+    if (!stored) return null;
+
+    const res = await fetch(`${BASE}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: stored }),
+    });
+    if (!res.ok) {
+      localStorage.removeItem('refreshToken');
+      return null;
+    }
     const data = await res.json();
     useAuthStore.getState().setToken(data.accessToken);
+    localStorage.setItem('refreshToken', data.refreshToken);
     return data.accessToken;
   } catch {
     return null;
@@ -26,14 +37,14 @@ export async function api<T = unknown>(path: string, options: RequestInit = {}):
     headers['Authorization'] = `Bearer ${accessToken}`;
   }
 
-  let res = await fetch(`${BASE}${path}`, { ...options, headers, credentials: 'include' });
+  let res = await fetch(`${BASE}${path}`, { ...options, headers });
 
   // If 401 try refresh
   if (res.status === 401 && accessToken) {
     const newToken = await refreshToken();
     if (newToken) {
       headers['Authorization'] = `Bearer ${newToken}`;
-      res = await fetch(`${BASE}${path}`, { ...options, headers, credentials: 'include' });
+      res = await fetch(`${BASE}${path}`, { ...options, headers });
     }
   }
 
