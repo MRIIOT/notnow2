@@ -66,10 +66,10 @@ export function TaskDetail({ task, members, onUpdate }: TaskDetailProps) {
           <span className="font-mono text-[10px] uppercase tracking-wider text-text-tertiary">Due:</span>
           <input
             type="date"
-            value={task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : ''}
+            value={task.dueDate ? task.dueDate.split('T')[0] : ''}
             onChange={(e) => {
               const val = e.target.value;
-              onUpdate(task._id, { dueDate: val ? new Date(val).toISOString() : null } as any);
+              onUpdate(task._id, { dueDate: val ? val + 'T12:00:00.000Z' : null } as any);
             }}
             className="bg-bg-active border-none rounded px-2 py-[3px] font-mono text-[11px] text-text-secondary outline-none [color-scheme:dark]"
           />
