@@ -95,9 +95,9 @@ export function useTasks(view: string, groupId?: string) {
       await qc.cancelQueries({ queryKey });
       const prev = qc.getQueryData<Task[]>(queryKey);
       if (prev) {
-        qc.setQueryData<Task[]>(queryKey, prev.map((t) =>
-          t._id === taskId ? { ...t, ...data } : t
-        ).sort((a, b) => {
+        qc.setQueryData<Task[]>(queryKey, (prev.map((t) =>
+          t._id === taskId ? { ...t, ...data } as Task : t
+        ) as Task[]).sort((a, b) => {
           // Sort by section then by the relevant order field
           if (view === 'group') return a.groupOrder.localeCompare(b.groupOrder);
           const sectionOrder = { above: 0, below: 1, waiting: 2, someday: 3 };
