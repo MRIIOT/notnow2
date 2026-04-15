@@ -132,6 +132,20 @@ router.get('/me', authenticate, async (req: Request, res: Response, next: NextFu
   }
 });
 
+// GET /auth/search-users?q=chris
+router.get('/search-users', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const q = (req.query.q as string || '').toLowerCase().replace(/^@/, '');
+    if (q.length < 1) { res.json({ users: [] }); return; }
+    const users = await User.find({
+      username: { $regex: `^${q}`, $options: 'i' },
+    }).select('username displayName').limit(10);
+    res.json({ users: users.map((u) => ({ id: u._id, username: u.username, displayName: u.displayName })) });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /auth/check-handle/:handle
 router.get('/check-handle/:handle', async (req: Request, res: Response, next: NextFunction) => {
   try {

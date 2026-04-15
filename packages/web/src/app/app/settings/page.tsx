@@ -1,9 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTeam } from '@/hooks/useTeam';
 import { useAuthStore } from '@/stores/authStore';
 import { api } from '@/lib/api';
+
+interface UserSuggestion {
+  id: string;
+  username: string;
+  displayName: string;
+}
 
 export default function SettingsPage() {
   const { team, addMember, removeMember } = useTeam();
@@ -12,6 +18,33 @@ export default function SettingsPage() {
   const isAdmin = currentMember?.role === 'admin' || currentMember?.role === 'owner';
   const [newUsername, setNewUsername] = useState('');
   const [addError, setAddError] = useState('');
+  const [suggestions, setSuggestions] = useState<UserSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const q = newUsername.replace(/^@/, '').trim();
+    if (q.length < 1) { setSuggestions([]); return; }
+    const timer = setTimeout(async () => {
+      try {
+        const data = await api<{ users: UserSuggestion[] }>(`/auth/search-users?q=${encodeURIComponent(q)}`);
+        // Filter out existing members
+        const existingIds = new Set(team?.members.map((m) => m.userId) || []);
+        setSuggestions(data.users.filter((u) => !existingIds.has(u.id)));
+      } catch { setSuggestions([]); }
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [newUsername, team?.members]);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (suggestRef.current && !suggestRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   // Password state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -68,13 +101,37 @@ export default function SettingsPage() {
           {isAdmin && (
             <>
               <form onSubmit={handleAddMember} className="flex items-center gap-2 mt-2">
-                <input
-                  type="text"
-                  value={newUsername}
-                  onChange={(e) => setNewUsername(e.target.value)}
-                  placeholder="@username"
-                  className="flex-1 bg-bg border border-border rounded px-2.5 py-[7px] font-mono text-[12px] text-text outline-none focus:border-accent"
-                />
+                <div className="flex-1 relative" ref={suggestRef}>
+                  <input
+                    type="text"
+                    value={newUsername}
+                    onChange={(e) => { setNewUsername(e.target.value); setShowSuggestions(true); }}
+                    onFocus={() => setShowSuggestions(true)}
+                    placeholder="@username"
+                    className="w-full bg-bg border border-border rounded px-2.5 py-[7px] font-mono text-[12px] text-text outline-none focus:border-accent"
+                    autoComplete="off"
+                  />
+                  {showSuggestions && suggestions.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-bg-raised border border-border rounded-lg shadow-xl z-50 overflow-hidden">
+                      {suggestions.map((u) => (
+                        <button
+                          key={u.id}
+                          type="button"
+                          onClick={() => {
+                            setNewUsername(u.username);
+                            setShowSuggestions(false);
+                          }}
+                          className="w-full text-left px-3 py-2 font-mono text-[12px] text-text-secondary hover:bg-bg-hover hover:text-text transition-all flex items-center gap-2"
+                        >
+                          <span className="text-accent">@{u.username}</span>
+                          {u.displayName && u.displayName !== u.username && (
+                            <span className="text-text-tertiary text-[11px]">{u.displayName}</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <button
                   type="submit"
                   className="font-mono text-[11px] bg-accent-dim text-accent border border-accent rounded px-3.5 py-[7px] hover:bg-accent hover:text-bg transition-all"
