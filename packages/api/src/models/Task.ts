@@ -17,8 +17,7 @@ export interface ITask extends Document {
   groupId: Types.ObjectId;
   title: string;
   notes: string;
-  status: 'active' | 'completed' | 'cancelled' | 'deleted';
-  cancelReason: string;
+  status: 'active' | 'completed' | 'deleted';
   pipelineSection: 'above' | 'below' | 'waiting' | 'someday';
   pipelineOrder: string;
   groupOrder: string;
@@ -56,10 +55,9 @@ const taskSchema = new Schema<ITask>(
     status: {
       type: String,
       required: true,
-      enum: ['active', 'completed', 'cancelled', 'deleted'],
+      enum: ['active', 'completed', 'deleted'],
       default: 'active',
     },
-    cancelReason: { type: String, default: '' },
     pipelineSection: {
       type: String,
       required: true,

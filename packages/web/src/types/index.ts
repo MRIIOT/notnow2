@@ -45,7 +45,7 @@ export interface Task {
   groupId: string;
   title: string;
   notes: string;
-  status: 'active' | 'completed' | 'cancelled' | 'deleted';
+  status: 'active' | 'completed' | 'deleted';
   pipelineSection: 'above' | 'below' | 'waiting' | 'someday';
   pipelineOrder: string;
   groupOrder: string;

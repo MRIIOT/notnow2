@@ -12,8 +12,8 @@ export const createTaskSchema = z.object({
 export const updateTaskSchema = z.object({
   title: z.string().min(1).max(500).optional(),
   notes: z.string().optional(),
-  status: z.enum(['active', 'completed', 'cancelled', 'deleted']).optional(),
-  cancelReason: z.string().optional(),
+  status: z.enum(['active', 'completed', 'deleted']).optional(),
+
   pipelineSection: z.enum(['above', 'below', 'waiting', 'someday']).optional(),
   pipelineOrder: z.string().optional(),
   groupOrder: z.string().optional(),
