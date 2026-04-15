@@ -31,6 +31,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             return;
           }
           const { accessToken } = await refreshRes.json();
+          // Set token first so api() can use it for the /me call
+          useAuthStore.getState().setToken(accessToken);
           const meRes = await api<{ user: User }>('/auth/me');
           setAuth(meRes.user, accessToken);
         } catch {
