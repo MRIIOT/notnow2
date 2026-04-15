@@ -1,6 +1,6 @@
 import { useAuthStore } from '@/stores/authStore';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 const BASE = `${API_URL}/api/v1`;
 
 async function refreshToken(): Promise<string | null> {

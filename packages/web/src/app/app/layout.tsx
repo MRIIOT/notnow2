@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
-import { api } from '@/lib/api';
+import { api, API_URL } from '@/lib/api';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Topbar } from '@/components/layout/Topbar';
 import { DetailPane } from '@/components/layout/DetailPane';
@@ -23,7 +23,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       if (!user) {
         // Try to restore session via refresh
         try {
-          const refreshRes = await fetch('/api/v1/auth/refresh', { method: 'POST', credentials: 'include' });
+          const refreshRes = await fetch(`${API_URL}/api/v1/auth/refresh`, { method: 'POST', credentials: 'include' });
           if (!refreshRes.ok) {
             router.replace('/auth/login');
             return;
