@@ -1,11 +1,78 @@
 'use client';
 
 import { useState } from 'react';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useAuthStore } from '@/stores/authStore';
 import { api } from '@/lib/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { SwipeToDelete } from './SwipeToDelete';
-import type { Task, TeamMember } from '@/types';
+import type { Task, TeamMember, Subtask } from '@/types';
+
+function SortableSubtaskRow({
+  sub,
+  onToggle,
+  onDelete,
+  onMoveUp,
+  onMoveDown,
+}: {
+  sub: Subtask;
+  onToggle: () => void;
+  onDelete: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: sub._id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes}>
+      <SwipeToDelete onDelete={onDelete}>
+        <div className="flex items-center gap-2 py-2 md:py-1 text-[15px] md:text-[13px] text-text-secondary group/sub">
+          <span
+            className="text-text-tertiary opacity-0 group-hover/sub:opacity-40 text-[10px] cursor-grab shrink-0 tracking-wider touch-none hidden md:inline"
+            {...listeners}
+          >
+            &#8942;&#8942;
+          </span>
+          <button
+            onClick={onToggle}
+            className={`w-5 h-5 md:w-3.5 md:h-3.5 border-[1.5px] rounded-[3px] shrink-0 relative transition-all ${
+              sub.completed ? 'bg-green border-green' : 'border-text-tertiary hover:border-accent'
+            }`}
+          >
+            {sub.completed && (
+              <span className="absolute -top-[2px] left-[1px] text-[10px] text-white font-bold">&#10003;</span>
+            )}
+          </button>
+          <span className={`flex-1 ${sub.completed ? 'line-through text-text-tertiary' : ''}`}>{sub.title}</span>
+          <div className="flex items-center gap-0.5 md:opacity-0 group-hover/sub:md:opacity-60 transition-all">
+            <button onClick={onMoveUp} className="text-[10px] text-text-tertiary hover:text-text-secondary px-0.5 md:hidden">&#9650;</button>
+            <button onClick={onMoveDown} className="text-[10px] text-text-tertiary hover:text-text-secondary px-0.5 md:hidden">&#9660;</button>
+            <button onClick={onDelete} className="font-mono text-[10px] text-text-tertiary hover:!text-red transition-all hidden md:block ml-1">&#10005;</button>
+          </div>
+        </div>
+      </SwipeToDelete>
+    </div>
+  );
+}
 
 interface TaskDetailProps {
   task: Task;
@@ -19,6 +86,10 @@ export function TaskDetail({ task, members, onUpdate }: TaskDetailProps) {
   const [newSubtask, setNewSubtask] = useState('');
   const teamId = useAuthStore((s) => s.activeTeamId);
   const qc = useQueryClient();
+
+  const subtaskSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+  );
 
   const saveNotes = () => {
     if (notes !== task.notes) {
@@ -70,6 +141,27 @@ export function TaskDetail({ task, members, onUpdate }: TaskDetailProps) {
     await api(`/teams/${teamId}/tasks/${task._id}/subtasks/reorder`, {
       method: 'POST',
       body: JSON.stringify({ orderedIds: ids }),
+    });
+    qc.invalidateQueries({ queryKey: ['tasks', teamId] });
+    qc.invalidateQueries({ queryKey: ['task', teamId, task._id] });
+  };
+
+  const handleSubtaskDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !teamId) return;
+
+    const ids = task.subtasks.map((s) => s._id);
+    const oldIdx = ids.indexOf(active.id as string);
+    const newIdx = ids.indexOf(over.id as string);
+    if (oldIdx === -1 || newIdx === -1) return;
+
+    const reordered = [...ids];
+    const [moved] = reordered.splice(oldIdx, 1);
+    reordered.splice(newIdx, 0, moved);
+
+    await api(`/teams/${teamId}/tasks/${task._id}/subtasks/reorder`, {
+      method: 'POST',
+      body: JSON.stringify({ orderedIds: reordered }),
     });
     qc.invalidateQueries({ queryKey: ['tasks', teamId] });
     qc.invalidateQueries({ queryKey: ['task', teamId, task._id] });
@@ -175,43 +267,20 @@ export function TaskDetail({ task, members, onUpdate }: TaskDetailProps) {
       {/* Subtasks */}
       <div className="mt-3">
         <div className="font-mono text-[10px] uppercase tracking-wider text-text-tertiary mb-1.5">Subtasks</div>
-        {task.subtasks.map((sub) => (
-          <SwipeToDelete key={sub._id} onDelete={() => deleteSubtask(sub._id)}>
-            <div className="flex items-center gap-2 py-2 md:py-1 text-[15px] md:text-[13px] text-text-secondary group/sub">
-              <button
-                onClick={() => toggleSubtask(sub._id, sub.completed)}
-                className={`w-5 h-5 md:w-3.5 md:h-3.5 border-[1.5px] rounded-[3px] shrink-0 relative transition-all ${
-                  sub.completed ? 'bg-green border-green' : 'border-text-tertiary hover:border-accent'
-                }`}
-              >
-                {sub.completed && (
-                  <span className="absolute -top-[2px] left-[1px] text-[10px] text-white font-bold">&#10003;</span>
-                )}
-              </button>
-              <span className={`flex-1 ${sub.completed ? 'line-through text-text-tertiary' : ''}`}>{sub.title}</span>
-              <div className="flex items-center gap-0.5 opacity-0 group-hover/sub:opacity-60 transition-all">
-                <button
-                  onClick={() => moveSubtask(sub._id, 'up')}
-                  className="text-[10px] text-text-tertiary hover:text-text-secondary px-0.5"
-                >
-                  &#9650;
-                </button>
-                <button
-                  onClick={() => moveSubtask(sub._id, 'down')}
-                  className="text-[10px] text-text-tertiary hover:text-text-secondary px-0.5"
-                >
-                  &#9660;
-                </button>
-                <button
-                  onClick={() => deleteSubtask(sub._id)}
-                  className="font-mono text-[10px] text-text-tertiary hover:!text-red transition-all hidden md:block ml-1"
-                >
-                  &#10005;
-                </button>
-              </div>
-            </div>
-          </SwipeToDelete>
-        ))}
+        <DndContext sensors={subtaskSensors} collisionDetection={closestCenter} onDragEnd={handleSubtaskDragEnd}>
+          <SortableContext items={task.subtasks.map((s) => s._id)} strategy={verticalListSortingStrategy}>
+            {task.subtasks.map((sub) => (
+              <SortableSubtaskRow
+                key={sub._id}
+                sub={sub}
+                onToggle={() => toggleSubtask(sub._id, sub.completed)}
+                onDelete={() => deleteSubtask(sub._id)}
+                onMoveUp={() => moveSubtask(sub._id, 'up')}
+                onMoveDown={() => moveSubtask(sub._id, 'down')}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
 
         <form onSubmit={addSubtask} className="mt-1">
           <input
