@@ -221,21 +221,6 @@ export function Sidebar() {
         )}
       </div>
 
-      <div className="mx-[18px] h-px bg-border my-1.5" />
-
-      <div className="p-3 pt-1.5 pb-3">
-        <button
-          onClick={() => nav('/app/trash')}
-          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-[13px] transition-all ${
-            isActive('/app/trash')
-              ? 'bg-accent-dim text-accent'
-              : 'text-text-tertiary hover:bg-bg-hover hover:text-text-secondary'
-          }`}
-        >
-          <span className="font-mono text-[13px] w-4 text-center">&#9249;</span>
-          Trash
-        </button>
-      </div>
     </div>
     </>
   );

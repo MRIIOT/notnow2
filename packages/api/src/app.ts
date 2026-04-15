@@ -7,7 +7,7 @@ import authRoutes from './routes/auth.routes.js';
 import teamsRoutes from './routes/teams.routes.js';
 import groupsRoutes from './routes/groups.routes.js';
 import tasksRoutes from './routes/tasks.routes.js';
-import trashRoutes from './routes/trash.routes.js';
+
 
 const app = express();
 
@@ -20,7 +20,7 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/teams', teamsRoutes);
 app.use('/api/v1/teams/:teamId/groups', groupsRoutes);
 app.use('/api/v1/teams/:teamId/tasks', tasksRoutes);
-app.use('/api/v1/teams/:teamId/trash', trashRoutes);
+
 
 // Health check
 app.get('/api/v1/health', (_req, res) => {
