@@ -26,12 +26,13 @@ async function createRefreshToken(userId: string): Promise<string> {
 }
 
 function setRefreshCookie(res: Response, token: string) {
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
   res.cookie('refreshToken', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
     maxAge: REFRESH_TOKEN_DAYS * 24 * 60 * 60 * 1000,
-    path: '/api/v1/auth',
+    path: '/',
   });
 }
 
@@ -127,7 +128,7 @@ router.post('/logout', async (req: Request, res: Response, next: NextFunction) =
     if (token) {
       await RefreshToken.deleteOne({ token });
     }
-    res.clearCookie('refreshToken', { path: '/api/v1/auth' });
+    res.clearCookie('refreshToken', { path: '/' });
     res.json({ ok: true });
   } catch (err) {
     next(err);
