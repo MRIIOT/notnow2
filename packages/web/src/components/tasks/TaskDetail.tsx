@@ -59,25 +59,6 @@ export function TaskDetail({ task, members, onUpdate }: TaskDetailProps) {
 
   return (
     <div className="mt-3 pt-3 border-t border-border w-full" onClick={(e) => e.stopPropagation()}>
-      {/* Pipeline section */}
-      <div className="flex items-center gap-1.5 mb-3">
-        <span className="font-mono text-[10px] uppercase tracking-wider text-text-tertiary">Section:</span>
-        {(['above', 'below', 'waiting', 'someday'] as const).map((section) => (
-          <button
-            key={section}
-            onClick={() => onUpdate(task._id, { pipelineSection: section } as any)}
-            className={`font-mono text-[10px] px-2 py-[2px] rounded transition-all ${
-              task.pipelineSection === section
-                ? section === 'waiting' ? 'text-blue bg-blue-dim border border-blue'
-                  : section === 'someday' ? 'text-text-tertiary bg-bg-active border border-text-tertiary'
-                  : 'text-accent bg-accent-dim border border-accent'
-                : 'text-text-tertiary bg-bg-active border border-transparent hover:text-text-secondary'
-            }`}
-          >
-            {section === 'above' ? 'above' : section === 'below' ? 'below' : section}
-          </button>
-        ))}
-      </div>
 
       {/* Meta chips */}
       <div className="flex items-center gap-3 mb-3 flex-wrap">

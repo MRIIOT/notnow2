@@ -3,14 +3,15 @@
 import { useState } from 'react';
 import {
   DndContext,
-  closestCenter,
+  DragOverlay,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
+  useDroppable,
   type DragEndEvent,
   type DragStartEvent,
-  DragOverlay,
+  type DragOverEvent,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -21,18 +22,72 @@ import { useTasks } from '@/hooks/useTasks';
 import { useGroups } from '@/hooks/useGroups';
 import { useTeam } from '@/hooks/useTeam';
 import { SortableTaskRow } from '@/components/tasks/SortableTaskRow';
-import { TaskRow } from '@/components/tasks/TaskRow';
 import { TaskSkeleton, EmptyState } from '@/components/tasks/TaskSkeleton';
 import { generateKeyBetween } from '@/lib/ordering';
 import type { Task } from '@/types';
 
 type Section = 'above' | 'below' | 'waiting' | 'someday';
 
+const SECTION_ORDER: Section[] = ['waiting', 'above', 'below', 'someday'];
+
+const SECTION_CONFIG: Record<Section, { label: string; color: string; lineColor: string }> = {
+  waiting: { label: 'Waiting', color: 'text-blue', lineColor: 'bg-blue-dim' },
+  above: { label: 'Active', color: 'text-accent', lineColor: 'bg-accent-dim' },
+  below: { label: 'Below the line', color: 'text-text-secondary', lineColor: 'bg-border' },
+  someday: { label: 'Someday', color: 'text-text-tertiary', lineColor: 'bg-border-subtle' },
+};
+
+function DroppableSection({
+  id,
+  children,
+  label,
+  color,
+  lineColor,
+  isEmpty,
+  overSection,
+}: {
+  id: Section;
+  children: React.ReactNode;
+  label: string;
+  color: string;
+  lineColor: string;
+  isEmpty: boolean;
+  overSection: Section | null;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id });
+  const isHighlighted = isOver || overSection === id;
+
+  return (
+    <div className="mb-2">
+      <div className={`font-mono text-[10px] font-semibold uppercase tracking-[1.5px] ${color} pt-3 pb-1.5 flex items-center gap-2`}>
+        {label}
+        <div className={`flex-1 h-px ${lineColor}`} />
+      </div>
+      <div
+        ref={setNodeRef}
+        className={`min-h-[36px] rounded transition-colors ${
+          isHighlighted ? 'bg-bg-hover ring-1 ring-accent/30' : ''
+        }`}
+      >
+        {children}
+        {isEmpty && (
+          <div className={`flex items-center justify-center py-3 text-[11px] font-mono transition-colors ${
+            isHighlighted ? 'text-text-secondary' : 'text-text-tertiary opacity-40'
+          }`}>
+            {isHighlighted ? 'Drop here' : 'Empty'}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function PipelinePage() {
   const { tasks, isLoading, updateTask, deleteTask, reorderTask } = useTasks('pipeline');
   const { groups } = useGroups();
   const { team } = useTeam();
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [overSection, setOverSection] = useState<Section | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -48,13 +103,14 @@ export default function PipelinePage() {
     someday: activeTasks.filter((t) => t.pipelineSection === 'someday'),
   };
 
-  // All sortable IDs in one flat list for the DndContext
-  const allIds = [...sections.above, ...sections.below, ...sections.waiting, ...sections.someday].map((t) => t._id);
   const activeTask = activeId ? activeTasks.find((t) => t._id === activeId) : null;
 
-  function findSection(taskId: string): Section | null {
-    for (const [section, tasks] of Object.entries(sections)) {
-      if (tasks.find((t) => t._id === taskId)) return section as Section;
+  function findSection(id: string): Section | null {
+    // Check if it's a section droppable ID
+    if (SECTION_ORDER.includes(id as Section)) return id as Section;
+    // Otherwise find which section the task belongs to
+    for (const [section, sectionTasks] of Object.entries(sections)) {
+      if (sectionTasks.find((t) => t._id === id)) return section as Section;
     }
     return null;
   }
@@ -63,35 +119,66 @@ export default function PipelinePage() {
     setActiveId(event.active.id as string);
   }
 
+  function handleDragOver(event: DragOverEvent) {
+    const { over } = event;
+    if (!over) {
+      setOverSection(null);
+      return;
+    }
+    const section = findSection(over.id as string);
+    setOverSection(section);
+  }
+
   function handleDragEnd(event: DragEndEvent) {
     setActiveId(null);
+    setOverSection(null);
     const { active, over } = event;
-    if (!over || active.id === over.id) return;
+    if (!over) return;
 
     const activeTaskId = active.id as string;
     const overId = over.id as string;
 
     const fromSection = findSection(activeTaskId);
-    const toSection = findSection(overId);
+
+    // Determine target section: either a section droppable or the section of the task being dropped on
+    let toSection: Section | null;
+    if (SECTION_ORDER.includes(overId as Section)) {
+      // Dropped on an empty section zone
+      toSection = overId as Section;
+    } else {
+      toSection = findSection(overId);
+    }
+
     if (!fromSection || !toSection) return;
+
+    // Dropping on an empty section — append at the end
+    if (SECTION_ORDER.includes(overId as Section)) {
+      const targetList = sections[toSection];
+      const lastOrder = targetList.length > 0 ? targetList[targetList.length - 1].pipelineOrder : null;
+      const newOrder = generateKeyBetween(lastOrder, null);
+
+      reorderTask.mutate({
+        taskId: activeTaskId,
+        pipelineOrder: newOrder,
+        pipelineSection: toSection,
+      });
+      return;
+    }
+
+    // Dropping on another task
+    if (activeTaskId === overId) return;
 
     const targetList = [...sections[toSection]];
     const overIndex = targetList.findIndex((t) => t._id === overId);
-
-    // Compute new pipelineOrder key
-    const prev = overIndex > 0 ? targetList[overIndex - 1].pipelineOrder : null;
-    const next = targetList[overIndex]?.pipelineOrder ?? null;
-
-    // If dragging down within same section, adjust references
-    let newOrder: string;
     const fromIndex = sections[fromSection].findIndex((t) => t._id === activeTaskId);
 
+    let newOrder: string;
     if (fromSection === toSection && fromIndex < overIndex) {
-      // Moving down: insert after the over item
       const afterOver = overIndex < targetList.length - 1 ? targetList[overIndex + 1].pipelineOrder : null;
       newOrder = generateKeyBetween(targetList[overIndex].pipelineOrder, afterOver);
     } else {
-      // Moving up or cross-section: insert before the over item
+      const prev = overIndex > 0 ? targetList[overIndex - 1].pipelineOrder : null;
+      const next = targetList[overIndex]?.pipelineOrder ?? null;
       newOrder = generateKeyBetween(prev, next);
     }
 
@@ -108,21 +195,6 @@ export default function PipelinePage() {
 
   let rank = 1;
 
-  const renderSection = (sectionTasks: Task[], showRank: boolean) =>
-    sectionTasks.map((t) => (
-      <SortableTaskRow
-        key={t._id}
-        task={t}
-        rank={showRank ? rank++ : undefined}
-        showGroup
-        groups={groups}
-        members={team?.members}
-        onComplete={handleComplete}
-        onDelete={handleDelete}
-        onUpdate={handleUpdate}
-      />
-    ));
-
   return (
     <>
       <div className="px-7 pt-5 pb-4 border-b border-border-subtle shrink-0">
@@ -136,68 +208,58 @@ export default function PipelinePage() {
         ) : activeTasks.length === 0 ? (
           <EmptyState icon="&#9654;" message="No tasks in the pipeline. Add tasks from a group view." />
         ) : (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext items={allIds} strategy={verticalListSortingStrategy}>
-            <div className="list-none">
-              {renderSection(sections.above, true)}
-            </div>
+          <DndContext
+            sensors={sensors}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+          >
+            {SECTION_ORDER.map((sectionKey) => {
+              const config = SECTION_CONFIG[sectionKey];
+              const sectionTasks = sections[sectionKey];
+              const showRank = sectionKey === 'above' || sectionKey === 'below';
 
-            {(sections.below.length > 0 || sections.above.length > 0) && (
-              <div className="flex items-center gap-2 py-1.5 opacity-50 hover:opacity-100 transition-opacity">
-                <div className="flex-1 h-px" style={{ background: 'repeating-linear-gradient(to right, var(--color-accent) 0, var(--color-accent) 4px, transparent 4px, transparent 10px)' }} />
-                <span className="font-mono text-[9px] uppercase tracking-[1.5px] text-accent shrink-0">below the line</span>
-                <div className="flex-1 h-px" style={{ background: 'repeating-linear-gradient(to right, var(--color-accent) 0, var(--color-accent) 4px, transparent 4px, transparent 10px)' }} />
-              </div>
-            )}
+              return (
+                <DroppableSection
+                  key={sectionKey}
+                  id={sectionKey}
+                  label={config.label}
+                  color={config.color}
+                  lineColor={config.lineColor}
+                  isEmpty={sectionTasks.length === 0}
+                  overSection={overSection}
+                >
+                  <SortableContext items={sectionTasks.map((t) => t._id)} strategy={verticalListSortingStrategy}>
+                    {sectionTasks.map((t) => (
+                      <SortableTaskRow
+                        key={t._id}
+                        task={t}
+                        rank={showRank ? rank++ : undefined}
+                        showGroup
+                        groups={groups}
+                        members={team?.members}
+                        onComplete={handleComplete}
+                        onDelete={handleDelete}
+                        onUpdate={handleUpdate}
+                      />
+                    ))}
+                  </SortableContext>
+                </DroppableSection>
+              );
+            })}
 
-            {sections.below.length > 0 && (
-              <div className="list-none">
-                {renderSection(sections.below, true)}
-              </div>
-            )}
-
-            {sections.waiting.length > 0 && (
-              <>
-                <div className="font-mono text-[10px] font-semibold uppercase tracking-[1.5px] text-blue pt-[18px] pb-2 flex items-center gap-2">
-                  Waiting
-                  <div className="flex-1 h-px bg-blue-dim" />
+            <DragOverlay>
+              {activeTask && (
+                <div className="bg-bg-raised border border-border rounded px-2 py-[7px] shadow-xl opacity-90">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-text-tertiary text-[11px] tracking-wider">&#8942;&#8942;</span>
+                    <div className="w-4 h-4 border-[1.5px] border-text-tertiary rounded-[3px] shrink-0" />
+                    <span className="text-[13px] text-text">{activeTask.title}</span>
+                  </div>
                 </div>
-                <div className="list-none">
-                  {renderSection(sections.waiting, false)}
-                </div>
-              </>
-            )}
-
-            {sections.someday.length > 0 && (
-              <>
-                <div className="font-mono text-[10px] font-semibold uppercase tracking-[1.5px] text-text-tertiary pt-[18px] pb-2 flex items-center gap-2">
-                  Someday
-                  <div className="flex-1 h-px bg-border-subtle" />
-                </div>
-                <div className="list-none">
-                  {renderSection(sections.someday, false)}
-                </div>
-              </>
-            )}
-          </SortableContext>
-
-          <DragOverlay>
-            {activeTask && (
-              <div className="bg-bg-raised border border-border rounded px-2 py-[7px] shadow-xl opacity-90">
-                <div className="flex items-center gap-2.5">
-                  <span className="text-text-tertiary text-[11px] tracking-wider">&#8942;&#8942;</span>
-                  <div className="w-4 h-4 border-[1.5px] border-text-tertiary rounded-[3px] shrink-0" />
-                  <span className="text-[13px] text-text">{activeTask.title}</span>
-                </div>
-              </div>
-            )}
-          </DragOverlay>
-        </DndContext>
+              )}
+            </DragOverlay>
+          </DndContext>
         )}
       </div>
     </>
