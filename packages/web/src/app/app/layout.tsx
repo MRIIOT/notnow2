@@ -7,13 +7,10 @@ import { api, API_URL } from '@/lib/api';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Topbar } from '@/components/layout/Topbar';
 import { DetailPane } from '@/components/layout/DetailPane';
-
-import { useUIStore } from '@/stores/uiStore';
 import type { Team, User } from '@/types';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, activeTeamId, setAuth, setTeams } = useAuthStore();
-  const selectedTaskId = useUIStore((s) => s.selectedTaskId);
   const router = useRouter();
   const [ready, setReady] = useState(false);
 
@@ -69,7 +66,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
         <main className="flex-1 flex flex-col overflow-hidden">{children}</main>
-        {selectedTaskId && <DetailPane />}
+        <DetailPane />
       </div>
     </div>
   );

@@ -22,6 +22,7 @@ import { useGroups } from '@/hooks/useGroups';
 import { useTaskCounts } from '@/hooks/useTaskCounts';
 import { useTeam } from '@/hooks/useTeam';
 import { useAuthStore } from '@/stores/authStore';
+import { useUIStore } from '@/stores/uiStore';
 import type { Group } from '@/types';
 
 function SortableGroupItem({ group, isActive, count, onDelete }: { group: Group; isActive: boolean; count?: number; onDelete?: () => void }) {
@@ -73,6 +74,8 @@ function SortableGroupItem({ group, isActive, count, onDelete }: { group: Group;
 export function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
+  const sidebarOpen = useUIStore((s) => s.sidebarOpen);
+  const setSidebarOpen = useUIStore((s) => s.setSidebarOpen);
   const { groups, createGroup, reorderGroups, deleteGroup } = useGroups();
   const taskCounts = useTaskCounts();
   const { team } = useTeam();
@@ -87,7 +90,10 @@ export function Sidebar() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const nav = (path: string) => router.push(path);
+  const nav = (path: string) => {
+    router.push(path);
+    setSidebarOpen(false);
+  };
   const isActive = (path: string) => pathname === path;
 
   const onAddGroup = async (e: React.FormEvent) => {
@@ -115,7 +121,25 @@ export function Sidebar() {
   };
 
   return (
-    <div className="w-[220px] bg-bg-surface border-r border-border flex flex-col shrink-0 overflow-y-auto">
+    <>
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      <div className={`
+        w-[220px] bg-bg-surface border-r border-border flex flex-col shrink-0 overflow-y-auto
+        fixed md:relative inset-y-0 left-0 z-40
+        transition-transform duration-200 ease-in-out
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+      `}>
+      {/* Close button on mobile */}
+      <div className="flex items-center justify-between p-3 pb-0 md:hidden">
+        <span className="font-mono font-bold text-[14px] text-text">notnow<span className="text-text-tertiary">.</span></span>
+        <button onClick={() => setSidebarOpen(false)} className="font-mono text-[14px] text-text-tertiary hover:text-text">&#10005;</button>
+      </div>
       <div className="p-3 pb-1.5">
         <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-text-tertiary px-2 mb-1.5">
           Views
@@ -213,5 +237,6 @@ export function Sidebar() {
         </button>
       </div>
     </div>
+    </>
   );
 }

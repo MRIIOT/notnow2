@@ -3,10 +3,12 @@
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { useAuthStore } from '@/stores/authStore';
+import { useUIStore } from '@/stores/uiStore';
 import { useAuth } from '@/hooks/useAuth';
 
 export function Topbar() {
   const { user, teams, activeTeamId, setActiveTeam } = useAuthStore();
+  const toggleSidebar = useUIStore((s) => s.toggleSidebar);
   const { logout, createTeam, checkHandle } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -64,7 +66,13 @@ export function Topbar() {
   return (
     <div className="h-11 bg-bg border-b border-border flex items-center justify-between px-4 shrink-0 z-10">
       <div className="flex items-center gap-3">
-        <Image src="/logo.png" alt="notnow" width={28} height={28} className="rounded" />
+        <button
+          onClick={toggleSidebar}
+          className="md:hidden font-mono text-[16px] text-text-secondary hover:text-text px-1"
+        >
+          &#9776;
+        </button>
+        <Image src="/logo.png" alt="notnow" width={28} height={28} className="rounded hidden md:block" />
 
         <div className="relative" ref={dropdownRef}>
           <button
@@ -156,10 +164,10 @@ export function Topbar() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2">
         <button
           onClick={logout}
-          className="font-mono text-[11px] text-text-tertiary hover:text-text-secondary px-2 py-1 rounded hover:bg-bg-hover transition-all"
+          className="font-mono text-[11px] text-text-tertiary hover:text-text-secondary px-2 py-1 rounded hover:bg-bg-hover transition-all hidden md:block"
         >
           logout
         </button>
