@@ -41,11 +41,11 @@ export default function GroupPage({ params }: { params: Promise<{ groupId: strin
 
   const group = groups.find((g) => g._id === groupId);
   const activeTasks = tasks.filter((t) => t.status === 'active');
-  const doneTasks = tasks.filter((t) => t.status === 'completed' || t.status === 'cancelled');
+  const doneTasks = tasks.filter((t) => t.status === 'completed');
   const activeTask = activeId ? activeTasks.find((t) => t._id === activeId) : null;
 
   const handleComplete = (taskId: string) => updateTask.mutate({ taskId, status: 'completed' } as any);
-  const handleCancel = (taskId: string, reason?: string) => updateTask.mutate({ taskId, status: 'cancelled', ...(reason ? { cancelReason: reason } : {}) } as any);
+
   const handleDelete = (taskId: string) => deleteTask.mutate(taskId);
   const handleUpdate = (taskId: string, data: Partial<Task>) => updateTask.mutate({ taskId, ...data } as any);
 
@@ -106,7 +106,7 @@ export default function GroupPage({ params }: { params: Promise<{ groupId: strin
                   task={t}
                   members={team?.members}
                   onComplete={handleComplete}
-                  onCancel={handleCancel}
+
                   onDelete={handleDelete}
                   onUpdate={handleUpdate}
                 />
@@ -141,7 +141,7 @@ export default function GroupPage({ params }: { params: Promise<{ groupId: strin
                   task={t}
                   members={team?.members}
                   onComplete={handleComplete}
-                  onCancel={handleCancel}
+
                   onDelete={handleDelete}
                   onUpdate={handleUpdate}
                 />

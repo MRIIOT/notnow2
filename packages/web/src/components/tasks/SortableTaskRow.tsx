@@ -12,7 +12,6 @@ interface SortableTaskRowProps {
   groups?: Group[];
   members?: TeamMember[];
   onComplete: (taskId: string) => void;
-  onCancel: (taskId: string, reason?: string) => void;
   onDelete: (taskId: string) => void;
   onUpdate: (taskId: string, data: Partial<Task>) => void;
 }
