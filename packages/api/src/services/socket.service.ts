@@ -42,10 +42,12 @@ export function setupSocketIO(io: SocketServer) {
  * Call from route handlers via req.app.locals.io
  */
 export function emitTeamEvent(
-  io: SocketServer,
+  io: SocketServer | undefined,
   teamId: string,
   event: string,
   data: unknown,
 ) {
-  io.to(`team:${teamId}`).emit(event, data);
+  if (io) {
+    io.to(`team:${teamId}`).emit(event, data);
+  }
 }
