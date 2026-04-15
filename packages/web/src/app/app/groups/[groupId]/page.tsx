@@ -22,6 +22,7 @@ import { useGroups } from '@/hooks/useGroups';
 import { useTeam } from '@/hooks/useTeam';
 import { SortableTaskRow } from '@/components/tasks/SortableTaskRow';
 import { TaskRow } from '@/components/tasks/TaskRow';
+import { SwipeToDelete } from '@/components/tasks/SwipeToDelete';
 import { TaskInput } from '@/components/tasks/TaskInput';
 import { TaskSkeleton } from '@/components/tasks/TaskSkeleton';
 import { generateKeyBetween } from '@/lib/ordering';
@@ -136,15 +137,15 @@ export default function GroupPage({ params }: { params: Promise<{ groupId: strin
             </div>
             <div className="list-none">
               {doneTasks.map((t) => (
-                <TaskRow
-                  key={t._id}
-                  task={t}
-                  members={team?.members}
-                  onComplete={handleComplete}
-
-                  onDelete={handleDelete}
-                  onUpdate={handleUpdate}
-                />
+                <SwipeToDelete key={t._id} onDelete={() => handleDelete(t._id)}>
+                  <TaskRow
+                    task={t}
+                    members={team?.members}
+                    onComplete={handleComplete}
+                    onDelete={handleDelete}
+                    onUpdate={handleUpdate}
+                  />
+                </SwipeToDelete>
               ))}
             </div>
           </>

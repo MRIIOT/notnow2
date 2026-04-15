@@ -3,6 +3,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { TaskRow } from './TaskRow';
+import { SwipeToDelete } from './SwipeToDelete';
 import type { Task, Group, TeamMember } from '@/types';
 
 interface SortableTaskRowProps {
@@ -35,7 +36,9 @@ export function SortableTaskRow(props: SortableTaskRowProps) {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
-      <TaskRow {...props} dragListeners={listeners} />
+      <SwipeToDelete onDelete={() => props.onDelete(props.task._id)}>
+        <TaskRow {...props} dragListeners={listeners} />
+      </SwipeToDelete>
     </div>
   );
 }

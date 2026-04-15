@@ -110,7 +110,7 @@ export function TaskRow({ task, rank, showGroup, groups, members, dragListeners,
             e.stopPropagation();
             onDelete(task._id);
           }}
-          className="font-mono text-[10px] text-text-tertiary opacity-0 group-hover:opacity-40 hover:!opacity-100 hover:!text-red transition-all"
+          className="font-mono text-[10px] text-text-tertiary opacity-0 group-hover:opacity-40 hover:!opacity-100 hover:!text-red transition-all hidden md:block"
         >
           &#10005;
         </button>

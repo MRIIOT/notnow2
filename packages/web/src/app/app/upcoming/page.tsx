@@ -4,6 +4,7 @@ import { useTasks } from '@/hooks/useTasks';
 import { useGroups } from '@/hooks/useGroups';
 import { useTeam } from '@/hooks/useTeam';
 import { TaskRow } from '@/components/tasks/TaskRow';
+import { SwipeToDelete } from '@/components/tasks/SwipeToDelete';
 import type { Task } from '@/types';
 
 function getWeekBucket(dateStr: string | null): string {
@@ -79,17 +80,17 @@ export default function UpcomingPage() {
             </div>
             <ul className="list-none">
               {buckets[bucket].map((t) => (
-                <TaskRow
-                  key={t._id}
-                  task={t}
-                  showGroup
-                  groups={groups}
-                  members={team?.members}
-                  onComplete={handleComplete}
-
-                  onDelete={handleDelete}
-                  onUpdate={handleUpdate}
+                <SwipeToDelete key={t._id} onDelete={() => handleDelete(t._id)}>
+                  <TaskRow
+                    task={t}
+                    showGroup
+                    groups={groups}
+                    members={team?.members}
+                    onComplete={handleComplete}
+                    onDelete={handleDelete}
+                    onUpdate={handleUpdate}
                 />
+                </SwipeToDelete>
               ))}
             </ul>
           </div>

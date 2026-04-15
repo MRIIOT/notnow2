@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { api } from '@/lib/api';
 import { useQueryClient } from '@tanstack/react-query';
+import { SwipeToDelete } from './SwipeToDelete';
 import type { Task, TeamMember } from '@/types';
 
 interface TaskDetailProps {
@@ -135,25 +136,27 @@ export function TaskDetail({ task, members, onUpdate }: TaskDetailProps) {
       <div className="mt-3">
         <div className="font-mono text-[10px] uppercase tracking-wider text-text-tertiary mb-1.5">Subtasks</div>
         {task.subtasks.map((sub) => (
-          <div key={sub._id} className="flex items-center gap-2 py-1 text-[13px] text-text-secondary group/sub">
-            <button
-              onClick={() => toggleSubtask(sub._id, sub.completed)}
-              className={`w-3.5 h-3.5 border-[1.5px] rounded-[3px] shrink-0 relative transition-all ${
-                sub.completed ? 'bg-green border-green' : 'border-text-tertiary hover:border-accent'
-              }`}
-            >
-              {sub.completed && (
-                <span className="absolute -top-[2px] left-[1px] text-[10px] text-white font-bold">&#10003;</span>
-              )}
-            </button>
-            <span className={`flex-1 ${sub.completed ? 'line-through text-text-tertiary' : ''}`}>{sub.title}</span>
-            <button
-              onClick={() => deleteSubtask(sub._id)}
-              className="font-mono text-[10px] text-text-tertiary opacity-0 group-hover/sub:opacity-50 hover:!opacity-100 hover:text-red transition-all"
-            >
-              &#10005;
-            </button>
-          </div>
+          <SwipeToDelete key={sub._id} onDelete={() => deleteSubtask(sub._id)}>
+            <div className="flex items-center gap-2 py-1 text-[13px] text-text-secondary group/sub">
+              <button
+                onClick={() => toggleSubtask(sub._id, sub.completed)}
+                className={`w-3.5 h-3.5 border-[1.5px] rounded-[3px] shrink-0 relative transition-all ${
+                  sub.completed ? 'bg-green border-green' : 'border-text-tertiary hover:border-accent'
+                }`}
+              >
+                {sub.completed && (
+                  <span className="absolute -top-[2px] left-[1px] text-[10px] text-white font-bold">&#10003;</span>
+                )}
+              </button>
+              <span className={`flex-1 ${sub.completed ? 'line-through text-text-tertiary' : ''}`}>{sub.title}</span>
+              <button
+                onClick={() => deleteSubtask(sub._id)}
+                className="font-mono text-[10px] text-text-tertiary opacity-0 group-hover/sub:opacity-50 hover:!opacity-100 hover:!text-red transition-all hidden md:block"
+              >
+                &#10005;
+              </button>
+            </div>
+          </SwipeToDelete>
         ))}
 
         <form onSubmit={addSubtask} className="mt-1">
