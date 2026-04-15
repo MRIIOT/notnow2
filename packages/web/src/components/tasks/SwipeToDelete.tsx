@@ -75,7 +75,7 @@ export function SwipeToDelete({ onDelete, children }: SwipeToDeleteProps) {
 
       {/* Content — does not move, just clips to reveal delete button */}
       <div
-        className="relative bg-bg md:!mr-0"
+        className="relative bg-inherit md:!mr-0"
         style={{
           marginRight: revealed ? 70 : dragX < 0 ? Math.min(-dragX, 70) : revealed && dragX > 0 ? Math.max(70 - dragX, 0) : 0,
           transition: isDragging.current ? 'none' : 'margin-right 0.2s ease-out',
