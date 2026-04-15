@@ -13,6 +13,7 @@ import type { Team, User } from '@/types';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, activeTeamId, setAuth, setTeams } = useAuthStore();
+  const selectedTaskId = useUIStore((s) => s.selectedTaskId);
   const router = useRouter();
   const [ready, setReady] = useState(false);
 
@@ -61,8 +62,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-
-  const selectedTaskId = useUIStore((s) => s.selectedTaskId);
 
   return (
     <div className="h-screen flex flex-col bg-bg">
