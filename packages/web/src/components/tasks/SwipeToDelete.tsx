@@ -8,50 +8,64 @@ interface SwipeToDeleteProps {
 }
 
 export function SwipeToDelete({ onDelete, children }: SwipeToDeleteProps) {
-  const [offsetX, setOffsetX] = useState(0);
-  const [showButton, setShowButton] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+  const [dragX, setDragX] = useState(0);
   const touchStartX = useRef(0);
   const isDragging = useRef(false);
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
     isDragging.current = true;
+    setDragX(0);
   }, []);
 
   const onTouchMove = useCallback((e: React.TouchEvent) => {
     if (!isDragging.current) return;
     const dx = e.touches[0].clientX - touchStartX.current;
-    if (dx < 0) {
-      setOffsetX(Math.max(dx, -80));
-    } else if (!showButton) {
-      setOffsetX(0);
+
+    if (revealed) {
+      // If already revealed, swiping right should hide
+      if (dx > 0) {
+        setDragX(dx);
+      }
+    } else {
+      // Swiping left to reveal
+      if (dx < 0) {
+        setDragX(dx);
+      }
     }
-  }, [showButton]);
+  }, [revealed]);
 
   const onTouchEnd = useCallback(() => {
     isDragging.current = false;
-    if (offsetX < -40) {
-      setShowButton(true);
-      setOffsetX(-70);
+
+    if (revealed) {
+      // If swiped right enough, hide the button
+      if (dragX > 30) {
+        setRevealed(false);
+      }
     } else {
-      setShowButton(false);
-      setOffsetX(0);
+      // If swiped left enough, reveal the button
+      if (dragX < -40) {
+        setRevealed(true);
+      }
     }
-  }, [offsetX]);
+    setDragX(0);
+  }, [dragX, revealed]);
 
-  const close = useCallback(() => {
-    setShowButton(false);
-    setOffsetX(0);
-  }, []);
-
+  // On desktop, render children directly with no wrapper
   return (
     <div className="relative overflow-hidden md:contents">
-      {/* Delete button behind */}
-      <div className="absolute inset-y-0 right-0 flex items-center md:hidden">
+      {/* Delete button — positioned at right edge, revealed by shrinking content */}
+      <div className={`
+        absolute inset-y-0 right-0 flex items-center md:hidden
+        transition-opacity duration-150
+        ${revealed ? 'opacity-100' : 'opacity-0'}
+      `}>
         <button
           onClick={() => {
             onDelete();
-            close();
+            setRevealed(false);
           }}
           className="bg-red text-white font-mono text-[11px] font-semibold h-full px-5 flex items-center"
         >
@@ -59,12 +73,12 @@ export function SwipeToDelete({ onDelete, children }: SwipeToDeleteProps) {
         </button>
       </div>
 
-      {/* Sliding content */}
+      {/* Content — does not move, just clips to reveal delete button */}
       <div
-        className="relative bg-bg md:!transform-none"
+        className="relative bg-bg md:!mr-0"
         style={{
-          transform: offsetX !== 0 ? `translateX(${offsetX}px)` : undefined,
-          transition: isDragging.current ? 'none' : 'transform 0.2s ease-out',
+          marginRight: revealed ? 70 : dragX < 0 ? Math.min(-dragX, 70) : revealed && dragX > 0 ? Math.max(70 - dragX, 0) : 0,
+          transition: isDragging.current ? 'none' : 'margin-right 0.2s ease-out',
         }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
