@@ -76,7 +76,10 @@ export function Topbar() {
           </button>
 
           {dropdownOpen && (
-            <div className="absolute top-[calc(100%+4px)] left-0 bg-bg-raised border border-border rounded-lg p-1.5 min-w-[240px] z-50 shadow-xl">
+            <div
+              className="absolute top-[calc(100%+4px)] left-0 bg-bg-raised border border-border rounded-lg p-1.5 min-w-[240px] z-50 shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
               {teams.map((t) => (
                 <button
                   key={t._id}
@@ -143,7 +146,10 @@ export function Topbar() {
                 </form>
               ) : (
                 <button
-                  onClick={() => setCreating(true)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCreating(true);
+                  }}
                   className="w-full px-2.5 py-1.5 rounded font-mono text-[11px] text-text-tertiary hover:bg-bg-hover hover:text-text-secondary transition-all text-left"
                 >
                   + Create team
