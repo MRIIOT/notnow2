@@ -40,7 +40,9 @@ export default function OnboardingPage() {
 
   return (
     <div className="bg-bg-surface border border-border rounded-lg p-9 w-[380px] max-w-[90vw]">
-      <img src="/logo.png" alt="notnow" className="w-10 h-10 rounded mb-1" />
+      <div className="font-mono font-bold text-[22px] text-text">
+        notnow<span className="text-text-tertiary">.</span>
+      </div>
       <p className="text-[13px] text-text-secondary mb-7">
         Welcome @{user?.username}! Create a team to get started.
       </p>
