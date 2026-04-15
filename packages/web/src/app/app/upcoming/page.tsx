@@ -2,6 +2,7 @@
 
 import { useTasks } from '@/hooks/useTasks';
 import { useGroups } from '@/hooks/useGroups';
+import { useTeam } from '@/hooks/useTeam';
 import { TaskRow } from '@/components/tasks/TaskRow';
 import type { Task } from '@/types';
 
@@ -26,6 +27,7 @@ function getWeekBucket(dateStr: string | null): string {
 export default function UpcomingPage() {
   const { tasks, updateTask, deleteTask } = useTasks('upcoming');
   const { groups } = useGroups();
+  const { team } = useTeam();
 
   const activeTasks = tasks.filter((t) => t.status === 'active');
 
@@ -82,6 +84,7 @@ export default function UpcomingPage() {
                   task={t}
                   showGroup
                   groups={groups}
+                  members={team?.members}
                   onComplete={handleComplete}
                   onCancel={handleCancel}
                   onDelete={handleDelete}
