@@ -58,6 +58,23 @@ export function TaskDetail({ task, members, onUpdate }: TaskDetailProps) {
     qc.invalidateQueries({ queryKey: ['task', teamId, task._id] });
   };
 
+  const moveSubtask = async (subId: string, direction: 'up' | 'down') => {
+    if (!teamId) return;
+    const ids = task.subtasks.map((s) => s._id);
+    const idx = ids.indexOf(subId);
+    if (idx === -1) return;
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= ids.length) return;
+    // Swap
+    [ids[idx], ids[targetIdx]] = [ids[targetIdx], ids[idx]];
+    await api(`/teams/${teamId}/tasks/${task._id}/subtasks/reorder`, {
+      method: 'POST',
+      body: JSON.stringify({ orderedIds: ids }),
+    });
+    qc.invalidateQueries({ queryKey: ['tasks', teamId] });
+    qc.invalidateQueries({ queryKey: ['task', teamId, task._id] });
+  };
+
   return (
     <div className="mt-3 pt-3 border-t border-border w-full" onClick={(e) => e.stopPropagation()}>
 
@@ -172,12 +189,26 @@ export function TaskDetail({ task, members, onUpdate }: TaskDetailProps) {
                 )}
               </button>
               <span className={`flex-1 ${sub.completed ? 'line-through text-text-tertiary' : ''}`}>{sub.title}</span>
-              <button
-                onClick={() => deleteSubtask(sub._id)}
-                className="font-mono text-[10px] text-text-tertiary opacity-0 group-hover/sub:opacity-50 hover:!opacity-100 hover:!text-red transition-all hidden md:block"
-              >
-                &#10005;
-              </button>
+              <div className="flex items-center gap-0.5 opacity-0 group-hover/sub:opacity-60 transition-all">
+                <button
+                  onClick={() => moveSubtask(sub._id, 'up')}
+                  className="text-[10px] text-text-tertiary hover:text-text-secondary px-0.5"
+                >
+                  &#9650;
+                </button>
+                <button
+                  onClick={() => moveSubtask(sub._id, 'down')}
+                  className="text-[10px] text-text-tertiary hover:text-text-secondary px-0.5"
+                >
+                  &#9660;
+                </button>
+                <button
+                  onClick={() => deleteSubtask(sub._id)}
+                  className="font-mono text-[10px] text-text-tertiary hover:!text-red transition-all hidden md:block ml-1"
+                >
+                  &#10005;
+                </button>
+              </div>
             </div>
           </SwipeToDelete>
         ))}

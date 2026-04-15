@@ -218,6 +218,32 @@ router.patch(
   },
 );
 
+// POST /teams/:teamId/tasks/:taskId/subtasks/reorder
+router.post(
+  '/:taskId/subtasks/reorder',
+  authenticate,
+  authorize(),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const task = await Task.findOne({ _id: req.params.taskId, teamId: req.params.teamId });
+      if (!task) throw Errors.notFound('Task');
+
+      const { orderedIds } = req.body;
+      if (!Array.isArray(orderedIds)) throw Errors.validation('orderedIds must be an array');
+
+      const reordered = orderedIds
+        .map((id: string) => task.subtasks.find((s) => s._id.toString() === id))
+        .filter(Boolean);
+
+      task.subtasks = reordered as typeof task.subtasks;
+      await task.save();
+      res.json({ task });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 // DELETE /teams/:teamId/tasks/:taskId/subtasks/:subId
 router.delete(
   '/:taskId/subtasks/:subId',

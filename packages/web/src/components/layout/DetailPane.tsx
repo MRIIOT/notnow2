@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useTeam } from '@/hooks/useTeam';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { generateKeyBetween } from '@/lib/ordering';
 import { TaskDetail } from '@/components/tasks/TaskDetail';
 import type { Task } from '@/types';
 
@@ -20,7 +21,6 @@ export function DetailPane() {
   const [dragY, setDragY] = useState(0);
   const touchStartY = useRef(0);
   const isDragging = useRef(false);
-  const sheetRef = useRef<HTMLDivElement>(null);
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
@@ -31,16 +31,12 @@ export function DetailPane() {
   const onTouchMove = useCallback((e: React.TouchEvent) => {
     if (!isDragging.current) return;
     const dy = e.touches[0].clientY - touchStartY.current;
-    if (dy > 0) {
-      setDragY(dy);
-    }
+    if (dy > 0) setDragY(dy);
   }, []);
 
   const onTouchEnd = useCallback(() => {
     isDragging.current = false;
-    if (dragY > 80) {
-      selectTask(null);
-    }
+    if (dragY > 80) selectTask(null);
     setDragY(0);
   }, [dragY, selectTask]);
 
@@ -48,6 +44,14 @@ export function DetailPane() {
     queryKey: ['task', teamId, selectedTaskId],
     queryFn: () =>
       api<{ task: Task }>(`/teams/${teamId}/tasks/${selectedTaskId}`).then((d) => d.task),
+    enabled: !!teamId && !!selectedTaskId,
+  });
+
+  // Get sibling tasks for reorder (pipeline view tasks in same section)
+  const { data: pipelineTasks } = useQuery({
+    queryKey: ['tasks', teamId, 'pipeline', undefined],
+    queryFn: () =>
+      api<{ tasks: Task[] }>(`/teams/${teamId}/tasks?view=pipeline`).then((d) => d.tasks),
     enabled: !!teamId && !!selectedTaskId,
   });
 
@@ -61,7 +65,37 @@ export function DetailPane() {
     });
   };
 
-  // Empty state — desktop only (hidden on mobile when no task selected)
+  const handleMove = useCallback((direction: 'up' | 'down') => {
+    if (!task || !pipelineTasks || !teamId) return;
+
+    const sectionTasks = pipelineTasks
+      .filter((t) => t.pipelineSection === task.pipelineSection && t.status === 'active')
+      .sort((a, b) => a.pipelineOrder.localeCompare(b.pipelineOrder));
+
+    const idx = sectionTasks.findIndex((t) => t._id === task._id);
+    if (idx === -1) return;
+
+    let newOrder: string;
+    if (direction === 'up' && idx > 0) {
+      const prev = idx > 1 ? sectionTasks[idx - 2].pipelineOrder : null;
+      newOrder = generateKeyBetween(prev, sectionTasks[idx - 1].pipelineOrder);
+    } else if (direction === 'down' && idx < sectionTasks.length - 1) {
+      const next = idx < sectionTasks.length - 2 ? sectionTasks[idx + 2].pipelineOrder : null;
+      newOrder = generateKeyBetween(sectionTasks[idx + 1].pipelineOrder, next);
+    } else {
+      return;
+    }
+
+    api(`/teams/${teamId}/tasks/${task._id}/reorder`, {
+      method: 'POST',
+      body: JSON.stringify({ pipelineOrder: newOrder }),
+    }).then(() => {
+      qc.invalidateQueries({ queryKey: ['tasks', teamId] });
+      qc.invalidateQueries({ queryKey: ['task', teamId, task._id] });
+    });
+  }, [task, pipelineTasks, teamId, qc]);
+
+  // Empty state — desktop only
   if (!selectedTaskId) {
     return (
       <div className="hidden md:flex w-[380px] bg-bg-surface border-l border-border items-center justify-center shrink-0">
@@ -75,13 +109,29 @@ export function DetailPane() {
   ) : (
     <>
       <div className="px-4 pt-2 md:pt-4 pb-3 border-b border-border-subtle flex items-start justify-between gap-2">
-        <h2 className="text-[14px] text-text font-medium leading-snug flex-1">{task.title}</h2>
-        <button
-          onClick={() => selectTask(null)}
-          className="font-mono text-[12px] text-text-tertiary hover:text-text-secondary shrink-0 mt-0.5 hidden md:block"
-        >
-          &#10005;
-        </button>
+        <h2 className="text-[15px] md:text-[14px] text-text font-medium leading-snug flex-1">{task.title}</h2>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => handleMove('up')}
+            className="font-mono text-[14px] text-text-tertiary hover:text-text-secondary px-1.5 py-0.5 rounded hover:bg-bg-hover transition-all"
+            title="Move up"
+          >
+            &#9650;
+          </button>
+          <button
+            onClick={() => handleMove('down')}
+            className="font-mono text-[14px] text-text-tertiary hover:text-text-secondary px-1.5 py-0.5 rounded hover:bg-bg-hover transition-all"
+            title="Move down"
+          >
+            &#9660;
+          </button>
+          <button
+            onClick={() => selectTask(null)}
+            className="font-mono text-[12px] text-text-tertiary hover:text-text-secondary shrink-0 px-1.5 py-0.5 rounded hover:bg-bg-hover transition-all hidden md:block"
+          >
+            &#10005;
+          </button>
+        </div>
       </div>
       <div className="flex-1 overflow-y-auto px-4 pb-6">
         <TaskDetail task={task} members={team?.members} onUpdate={handleUpdate} />
@@ -103,10 +153,9 @@ export function DetailPane() {
           onClick={() => selectTask(null)}
         />
         <div
-          ref={sheetRef}
           className="bg-bg-surface border-t border-border rounded-t-xl flex flex-col overflow-hidden"
           style={{
-            maxHeight: '55vh',
+            maxHeight: '60vh',
             transform: dragY > 0 ? `translateY(${dragY}px)` : undefined,
             transition: isDragging.current ? 'none' : 'transform 0.2s ease-out',
           }}
