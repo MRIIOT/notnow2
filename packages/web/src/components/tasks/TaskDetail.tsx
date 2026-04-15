@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
 import { api } from '@/lib/api';
 import { useQueryClient } from '@tanstack/react-query';
@@ -17,29 +16,8 @@ export function TaskDetail({ task, members, onUpdate }: TaskDetailProps) {
   const [notes, setNotes] = useState(task.notes);
   const [notesEditing, setNotesEditing] = useState(false);
   const [newSubtask, setNewSubtask] = useState('');
-  const [showTimeLog, setShowTimeLog] = useState(false);
-  const [logHours, setLogHours] = useState('');
-  const [logNote, setLogNote] = useState('');
-  const [logDate, setLogDate] = useState(new Date().toISOString().split('T')[0]);
   const teamId = useAuthStore((s) => s.activeTeamId);
-  const currentUserId = useAuthStore((s) => s.user?.id);
   const qc = useQueryClient();
-
-  // Check if current user has time tracking enabled
-  const currentMember = members?.find((m) => m.userId === currentUserId);
-  const timeTrackingEnabled = currentMember?.timeTrackingEnabled;
-
-  // Fetch time entries for this task
-  const { data: taskTimeData } = useQuery({
-    queryKey: ['task-time', task._id],
-    queryFn: () =>
-      api<{ entries: Array<{ _id: string; hours: number; date: string; note: string }> }>(
-        `/teams/${teamId}/time?taskId=${task._id}`
-      ).then((d) => d.entries),
-    enabled: !!teamId,
-  });
-
-  const totalHours = taskTimeData?.reduce((sum, e) => sum + e.hours, 0) || 0;
 
   const saveNotes = () => {
     if (notes !== task.notes) {
@@ -57,6 +35,7 @@ export function TaskDetail({ task, members, onUpdate }: TaskDetailProps) {
     });
     setNewSubtask('');
     qc.invalidateQueries({ queryKey: ['tasks', teamId] });
+    qc.invalidateQueries({ queryKey: ['task', teamId, task._id] });
   };
 
   const toggleSubtask = async (subId: string, completed: boolean) => {
@@ -66,6 +45,7 @@ export function TaskDetail({ task, members, onUpdate }: TaskDetailProps) {
       body: JSON.stringify({ completed: !completed }),
     });
     qc.invalidateQueries({ queryKey: ['tasks', teamId] });
+    qc.invalidateQueries({ queryKey: ['task', teamId, task._id] });
   };
 
   const deleteSubtask = async (subId: string) => {
@@ -74,26 +54,7 @@ export function TaskDetail({ task, members, onUpdate }: TaskDetailProps) {
       method: 'DELETE',
     });
     qc.invalidateQueries({ queryKey: ['tasks', teamId] });
-  };
-
-  const submitTimeLog = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!logHours || !teamId) return;
-    await api(`/teams/${teamId}/time`, {
-      method: 'POST',
-      body: JSON.stringify({
-        taskId: task._id,
-        groupId: task.groupId,
-        hours: parseFloat(logHours),
-        date: new Date(logDate).toISOString(),
-        note: logNote,
-      }),
-    });
-    setLogHours('');
-    setLogNote('');
-    setShowTimeLog(false);
-    qc.invalidateQueries({ queryKey: ['task-time', task._id] });
-    qc.invalidateQueries({ queryKey: ['time-summary'] });
+    qc.invalidateQueries({ queryKey: ['task', teamId, task._id] });
   };
 
   return (
@@ -148,13 +109,6 @@ export function TaskDetail({ task, members, onUpdate }: TaskDetailProps) {
             </button>
           )}
         </div>
-
-        {/* Time logged chip */}
-        {totalHours > 0 && (
-          <span className="font-mono text-[11px] px-2 py-[3px] rounded bg-green-dim text-green">
-            &#9201; {totalHours}h logged
-          </span>
-        )}
       </div>
 
       {/* Assignees */}
@@ -238,67 +192,6 @@ export function TaskDetail({ task, members, onUpdate }: TaskDetailProps) {
           />
         </form>
       </div>
-
-      {/* Quick time log */}
-      {timeTrackingEnabled && (
-        <div className="mt-3 pt-3 border-t border-border-subtle">
-          {showTimeLog ? (
-            <form onSubmit={submitTimeLog} className="flex flex-wrap items-center gap-2">
-              <input
-                type="number"
-                step="0.25"
-                min="0.25"
-                value={logHours}
-                onChange={(e) => setLogHours(e.target.value)}
-                placeholder="Hours"
-                required
-                className="bg-bg border border-border rounded px-2 py-1 font-mono text-[11px] text-accent w-16 outline-none focus:border-accent"
-              />
-              <input
-                type="date"
-                value={logDate}
-                onChange={(e) => setLogDate(e.target.value)}
-                className="bg-bg border border-border rounded px-2 py-1 font-mono text-[11px] text-text-secondary outline-none focus:border-accent [color-scheme:dark]"
-              />
-              <input
-                type="text"
-                value={logNote}
-                onChange={(e) => setLogNote(e.target.value)}
-                placeholder="Note"
-                className="flex-1 bg-bg border border-border rounded px-2 py-1 text-[11px] text-text outline-none focus:border-accent font-body min-w-[100px]"
-              />
-              <button type="submit" className="font-mono text-[10px] bg-accent text-bg px-2.5 py-1 rounded hover:bg-accent-hover transition-colors">
-                Log
-              </button>
-              <button type="button" onClick={() => setShowTimeLog(false)} className="font-mono text-[10px] text-text-tertiary px-1">
-                &#10005;
-              </button>
-            </form>
-          ) : (
-            <button
-              onClick={() => setShowTimeLog(true)}
-              className="font-mono text-[11px] text-text-tertiary hover:text-green transition-colors"
-            >
-              &#9201; Log time
-            </button>
-          )}
-
-          {/* Time entries for this task */}
-          {taskTimeData && taskTimeData.length > 0 && (
-            <div className="mt-2">
-              {taskTimeData.map((e) => (
-                <div key={e._id} className="flex items-center gap-2 py-0.5 text-[11px] text-text-tertiary">
-                  <span className="font-mono min-w-[42px]">
-                    {new Date(e.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                  </span>
-                  <span className="font-mono text-accent min-w-[28px] text-right">{e.hours}h</span>
-                  <span className="text-text-secondary">{e.note}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }

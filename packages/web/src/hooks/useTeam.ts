@@ -26,7 +26,7 @@ export function useTeam() {
   });
 
   const updateMember = useMutation({
-    mutationFn: ({ userId, ...data }: { userId: string; role?: string; timeTrackingEnabled?: boolean; defaultRate?: number }) =>
+    mutationFn: ({ userId, ...data }: { userId: string; role?: string }) =>
       api(`/teams/${teamId}/members/${userId}`, {
         method: 'PATCH',
         body: JSON.stringify(data),
@@ -40,21 +40,11 @@ export function useTeam() {
     onSuccess: () => qc.invalidateQueries({ queryKey }),
   });
 
-  const updateRates = useMutation({
-    mutationFn: ({ userId, overrides }: { userId: string; overrides: { groupId: string; rate: number }[] }) =>
-      api(`/teams/${teamId}/members/${userId}/rates`, {
-        method: 'PUT',
-        body: JSON.stringify({ overrides }),
-      }),
-    onSuccess: () => qc.invalidateQueries({ queryKey }),
-  });
-
   return {
     team: query.data || null,
     isLoading: query.isLoading,
     addMember,
     updateMember,
     removeMember,
-    updateRates,
   };
 }

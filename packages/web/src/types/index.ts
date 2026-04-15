@@ -10,9 +10,6 @@ export interface TeamMember {
   username: string;
   displayName: string;
   role: 'owner' | 'admin' | 'member';
-  timeTrackingEnabled: boolean;
-  defaultRate: number;
-  rateOverrides: { groupId: string; rate: number }[];
   joinedAt: string;
 }
 
@@ -58,15 +55,4 @@ export interface Task {
   deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface TimeEntry {
-  _id: string;
-  teamId: string;
-  taskId: string | null;
-  groupId: string;
-  userId: string;
-  hours: number;
-  date: string;
-  note: string;
 }

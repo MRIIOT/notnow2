@@ -16,15 +16,4 @@ export const addMemberSchema = z.object({
 
 export const updateMemberSchema = z.object({
   role: z.enum(['admin', 'member']).optional(),
-  timeTrackingEnabled: z.boolean().optional(),
-  defaultRate: z.number().int().min(0).optional(),
-});
-
-export const updateRatesSchema = z.object({
-  overrides: z.array(
-    z.object({
-      groupId: z.string(),
-      rate: z.number().int().min(0),
-    }),
-  ),
 });
