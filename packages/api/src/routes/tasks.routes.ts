@@ -73,7 +73,7 @@ router.get('/', authenticate, authorize(), async (req: Request, res: Response, n
     let sort: Record<string, 1 | -1> = {};
 
     if (view === 'pipeline') {
-      filter.status = 'active';
+      filter.status = { $in: ['active', 'completed'] };
       sort = { pipelineSection: 1, pipelineOrder: 1 };
     } else if (view === 'upcoming') {
       filter.status = 'active';
