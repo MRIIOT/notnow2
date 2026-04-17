@@ -24,7 +24,8 @@ type Segment =
   | { type: 'mention'; username: string }
   | { type: 'taskRef'; taskId: string }
   | { type: 'inlineCode'; content: string }
-  | { type: 'codeBlock'; language: string; content: string };
+  | { type: 'codeBlock'; language: string; content: string }
+  | { type: 'url'; href: string };
 
 function parseMessage(body: string): Segment[] {
   const segments: Segment[] = [];
@@ -55,8 +56,8 @@ function parseMessage(body: string): Segment[] {
 
 function parseInline(text: string): Segment[] {
   const segments: Segment[] = [];
-  // Match @username, #taskId (24-char hex), and `inline code`
-  const inlineRegex = /(@\w+)|(#([a-f0-9]{24}))|(`[^`]+`)/g;
+  // Match @username, #taskId (24-char hex), `inline code`, and URLs
+  const inlineRegex = /(@\w+)|(#([a-f0-9]{24}))|(`[^`]+`)|(https?:\/\/[^\s<>]+)/g;
   let lastIndex = 0;
   let match;
 
@@ -70,6 +71,8 @@ function parseInline(text: string): Segment[] {
       segments.push({ type: 'taskRef', taskId: match[3] });
     } else if (match[4]) {
       segments.push({ type: 'inlineCode', content: match[4].slice(1, -1) });
+    } else if (match[5]) {
+      segments.push({ type: 'url', href: match[5] });
     }
     lastIndex = match.index + match[0].length;
   }
@@ -119,6 +122,18 @@ export function MessageBody({ body, onTaskClick }: MessageBodyProps) {
               <code key={i} className="font-mono text-[11px] bg-bg-active text-accent rounded px-1.5 py-[1px]">
                 {seg.content}
               </code>
+            );
+          case 'url':
+            return (
+              <a
+                key={i}
+                href={seg.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent hover:underline break-all"
+              >
+                {seg.href}
+              </a>
             );
           case 'codeBlock':
             return (
