@@ -22,7 +22,7 @@ interface MessageBodyProps {
 type Segment =
   | { type: 'text'; content: string }
   | { type: 'mention'; username: string }
-  | { type: 'taskRef'; taskId: string }
+  | { type: 'taskRef'; taskId: string; label?: string }
   | { type: 'inlineCode'; content: string }
   | { type: 'codeBlock'; language: string; content: string }
   | { type: 'url'; href: string };
@@ -56,8 +56,8 @@ function parseMessage(body: string): Segment[] {
 
 function parseInline(text: string): Segment[] {
   const segments: Segment[] = [];
-  // Match @username, #taskId (24-char hex), `inline code`, and URLs
-  const inlineRegex = /(@\w+)|(#([a-f0-9]{24}))|(`[^`]+`)|(https?:\/\/[^\s<>]+)/g;
+  // Match: task ref with title "Title (#id)", bare #taskId, @username, `inline code`, URLs
+  const inlineRegex = /([^\s(][^(]*?\(#([a-f0-9]{24})\))|(@\w+)|(#([a-f0-9]{24}))|(`[^`]+`)|(https?:\/\/[^\s<>]+)/g;
   let lastIndex = 0;
   let match;
 
@@ -65,14 +65,18 @@ function parseInline(text: string): Segment[] {
     if (match.index > lastIndex) {
       segments.push({ type: 'text', content: text.slice(lastIndex, match.index) });
     }
-    if (match[1]) {
-      segments.push({ type: 'mention', username: match[1].slice(1) });
+    if (match[1] && match[2]) {
+      // "Task title (#taskId)" — full task reference
+      segments.push({ type: 'taskRef', taskId: match[2], label: match[1].trim() });
     } else if (match[3]) {
-      segments.push({ type: 'taskRef', taskId: match[3] });
-    } else if (match[4]) {
-      segments.push({ type: 'inlineCode', content: match[4].slice(1, -1) });
+      segments.push({ type: 'mention', username: match[3].slice(1) });
     } else if (match[5]) {
-      segments.push({ type: 'url', href: match[5] });
+      // Bare #taskId
+      segments.push({ type: 'taskRef', taskId: match[5] });
+    } else if (match[6]) {
+      segments.push({ type: 'inlineCode', content: match[6].slice(1, -1) });
+    } else if (match[7]) {
+      segments.push({ type: 'url', href: match[7] });
     }
     lastIndex = match.index + match[0].length;
   }
@@ -112,9 +116,9 @@ export function MessageBody({ body, onTaskClick }: MessageBodyProps) {
               <button
                 key={i}
                 onClick={() => onTaskClick?.(seg.taskId)}
-                className="font-mono text-accent hover:underline text-[11px]"
+                className="text-accent hover:underline text-[11px]"
               >
-                #{seg.taskId.slice(-6)}
+                {seg.label || <span className="font-mono">#{seg.taskId.slice(-6)}</span>}
               </button>
             );
           case 'inlineCode':
