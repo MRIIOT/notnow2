@@ -111,15 +111,21 @@ export function MessageBody({ body, onTaskClick }: MessageBodyProps) {
                 @{seg.username}
               </span>
             );
-          case 'taskRef':
+          case 'taskRef': {
+            // Show "Title (#short)" format, replacing any full ID with short
+            const displayLabel = seg.label
+              ? seg.label.replace(/#[a-f0-9]{24}/g, `#${seg.taskId.slice(-6)}`)
+              : null;
             return (
               <button
                 key={i}
                 onClick={() => onTaskClick?.(seg.taskId)}
                 className="text-accent hover:underline text-[11px]"
               >
-                {seg.label || <span className="font-mono">#{seg.taskId.slice(-6)}</span>}
+                {displayLabel || <span className="font-mono">#{seg.taskId.slice(-6)}</span>}
               </button>
+            );
+          }
             );
           case 'inlineCode':
             return (
