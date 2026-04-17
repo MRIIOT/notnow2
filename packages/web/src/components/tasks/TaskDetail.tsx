@@ -193,6 +193,56 @@ export function TaskDetail({ task, members, onUpdate }: TaskDetailProps) {
         })}
       </div>
 
+      {/* Energy tag */}
+      <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+        <span className="font-mono text-[10px] uppercase tracking-wider text-text-tertiary">Energy:</span>
+        {([
+          { key: 'quick', label: '⚡ Quick', color: 'text-accent' },
+          { key: 'deep', label: '🧩 Deep', color: 'text-blue' },
+          { key: 'people', label: '📞 People', color: 'text-green' },
+          { key: 'hands-on', label: '🔧 Hands-on', color: 'text-orange' },
+        ] as const).map(({ key, label, color }) => (
+          <button
+            key={key}
+            onClick={() => onUpdate(task._id, { energy: task.energy === key ? null : key } as any)}
+            className={`font-mono text-[11px] md:text-[10px] px-2 py-[3px] md:py-[2px] rounded transition-all ${
+              task.energy === key
+                ? `${color} bg-bg-active border border-current`
+                : 'text-text-tertiary bg-bg-active border border-transparent hover:text-text-secondary'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Importance */}
+      <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+        <span className="font-mono text-[10px] uppercase tracking-wider text-text-tertiary">Priority:</span>
+        {([
+          { key: 'urgent-important', label: '██', desc: 'Do now' },
+          { key: 'important', label: '█░', desc: 'Schedule' },
+          { key: 'urgent', label: '░█', desc: 'Delegate' },
+          { key: 'neither', label: '░░', desc: 'Drop' },
+        ] as const).map(({ key, label, desc }) => (
+          <button
+            key={key}
+            onClick={() => onUpdate(task._id, { importance: task.importance === key ? null : key } as any)}
+            className={`font-mono text-[11px] md:text-[10px] px-2 py-[3px] md:py-[2px] rounded transition-all ${
+              task.importance === key
+                ? key === 'urgent-important' ? 'text-red bg-red-dim border border-red'
+                  : key === 'important' ? 'text-blue bg-blue-dim border border-blue'
+                  : key === 'urgent' ? 'text-orange bg-orange-dim border border-orange'
+                  : 'text-text-tertiary bg-bg-active border border-text-tertiary'
+                : 'text-text-tertiary bg-bg-active border border-transparent hover:text-text-secondary'
+            }`}
+            title={desc}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       {/* Meta chips */}
       <div className="flex items-center gap-3 mb-3 flex-wrap">
         <div className="flex items-center gap-1.5">

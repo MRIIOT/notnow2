@@ -18,6 +18,8 @@ export interface ITask extends Document {
   groupOrder: string;
   assignees: Types.ObjectId[];
   dueDate: Date | null;
+  energy: 'quick' | 'deep' | 'people' | 'hands-on' | null;
+  importance: 'urgent-important' | 'important' | 'urgent' | 'neither' | null;
   subtasks: ISubtask[];
   createdBy: Types.ObjectId;
   completedAt: Date | null;
@@ -54,6 +56,8 @@ const taskSchema = new Schema<ITask>(
     groupOrder: { type: String, default: 'a0' },
     assignees: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     dueDate: { type: Date, default: null },
+    energy: { type: String, enum: ['quick', 'deep', 'people', 'hands-on', null], default: null },
+    importance: { type: String, enum: ['urgent-important', 'important', 'urgent', 'neither', null], default: null },
     subtasks: { type: [subtaskSchema], default: [] },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     completedAt: { type: Date, default: null },

@@ -48,7 +48,8 @@ export interface Task {
   groupOrder: string;
   assignees: string[];
   dueDate: string | null;
-
+  energy: 'quick' | 'deep' | 'people' | 'hands-on' | null;
+  importance: 'urgent-important' | 'important' | 'urgent' | 'neither' | null;
   subtasks: Subtask[];
   createdBy: string;
   completedAt: string | null;

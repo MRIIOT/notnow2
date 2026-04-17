@@ -6,6 +6,8 @@ export const createTaskSchema = z.object({
   notes: z.string().optional(),
   pipelineSection: z.enum(['above', 'below', 'waiting', 'someday']).optional(),
   dueDate: z.string().datetime().nullable().optional(),
+  energy: z.enum(['quick', 'deep', 'people', 'hands-on']).nullable().optional(),
+  importance: z.enum(['urgent-important', 'important', 'urgent', 'neither']).nullable().optional(),
   assignees: z.array(z.string()).optional(),
 });
 
@@ -13,11 +15,12 @@ export const updateTaskSchema = z.object({
   title: z.string().min(1).max(500).optional(),
   notes: z.string().optional(),
   status: z.enum(['active', 'completed', 'deleted']).optional(),
-
   pipelineSection: z.enum(['above', 'below', 'waiting', 'someday']).optional(),
   pipelineOrder: z.string().optional(),
   groupOrder: z.string().optional(),
   dueDate: z.string().datetime().nullable().optional(),
+  energy: z.enum(['quick', 'deep', 'people', 'hands-on']).nullable().optional(),
+  importance: z.enum(['urgent-important', 'important', 'urgent', 'neither']).nullable().optional(),
   assignees: z.array(z.string()).optional(),
 });
 
