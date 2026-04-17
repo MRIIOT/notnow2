@@ -78,6 +78,9 @@ export function TaskRow({ task, rank, showGroup, groups, members, messageCount, 
       <span className={`flex-1 text-[15px] md:text-[13px] leading-snug truncate ${isCompleted ? 'line-through text-text-tertiary' : 'text-text'}`}>
         {task.title}
       </span>
+      <span className="font-mono text-[9px] text-text-tertiary opacity-40 shrink-0">
+        #{task._id.slice(-6)}
+      </span>
       {task.subtasks.length > 0 && (
         <span className={`font-mono text-[9px] shrink-0 border rounded-full w-[30px] h-[16px] flex items-center justify-center ${
           task.subtasks.every((s) => s.completed)

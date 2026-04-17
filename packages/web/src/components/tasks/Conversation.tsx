@@ -185,7 +185,7 @@ export function Conversation({ taskId, members }: ConversationProps) {
 
   const insertTaskRef = (task: Task) => {
     const lastHash = body.lastIndexOf('#');
-    const newBody = body.slice(0, lastHash) + `${task.title} (#${task._id}) `;
+    const newBody = body.slice(0, lastHash) + `${task.title} (#${task._id.slice(-6)}) `;
     setBody(newBody);
     setShowTaskRef(false);
     setTaskSuggestions([]);

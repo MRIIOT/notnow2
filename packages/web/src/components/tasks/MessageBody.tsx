@@ -57,7 +57,7 @@ function parseMessage(body: string): Segment[] {
 function parseInline(text: string): Segment[] {
   const segments: Segment[] = [];
   // Match: task ref with title "Title (#id)", bare #taskId, @username, `inline code`, URLs
-  const inlineRegex = /([^\s(][^(]*?\(#([a-f0-9]{24})\))|(@\w+)|(#([a-f0-9]{24}))|(`[^`]+`)|(https?:\/\/[^\s<>]+)/g;
+  const inlineRegex = /([^\s(][^(]*?\(#([a-f0-9]{6,24})\))|(@\w+)|(#([a-f0-9]{6,24}))|(`[^`]+`)|(https?:\/\/[^\s<>]+)/g;
   let lastIndex = 0;
   let match;
 
