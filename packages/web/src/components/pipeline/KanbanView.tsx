@@ -8,6 +8,7 @@ import {
 import { SortableContext, verticalListSortingStrategy, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { SortableTaskRow } from '@/components/tasks/SortableTaskRow';
 import { DroppableSection } from './DroppableSection';
+import { generateKeyBetween } from '@/lib/ordering';
 import type { Task, Group, TeamMember } from '@/types';
 
 const KANBAN_COLUMNS = [
@@ -34,8 +35,10 @@ export function KanbanView({ tasks, groups, members, onComplete, onDelete, onUpd
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const inProgress = tasks.filter((t) => t.status === 'active' && t.pipelineSection === 'active');
-  const todo = tasks.filter((t) => t.status === 'active' && t.pipelineSection !== 'active');
+  const inProgress = tasks.filter((t) => t.status === 'active' && t.pipelineSection === 'active')
+    .sort((a, b) => a.pipelineOrder.localeCompare(b.pipelineOrder));
+  const todo = tasks.filter((t) => t.status === 'active' && t.pipelineSection !== 'active')
+    .sort((a, b) => a.pipelineOrder.localeCompare(b.pipelineOrder));
   const done = tasks.filter((t) => t.status === 'completed').slice(0, 10);
 
   const columns: Record<string, Task[]> = { 'in-progress': inProgress, 'todo': todo, 'done': done };
@@ -54,29 +57,49 @@ export function KanbanView({ tasks, groups, members, onComplete, onDelete, onUpd
     setActiveId(null);
     setOverSection(null);
     const { active: dragActive, over } = event;
-    if (!over) return;
+    if (!over || dragActive.id === over.id) return;
     const taskId = dragActive.id as string;
     const overId = over.id as string;
     const task = tasks.find((t) => t._id === taskId);
     if (!task) return;
 
-    const targetCol = KANBAN_COLUMNS.find((c) => c.key === overId) ? overId : findColumn(overId);
+    const isDropOnColumn = KANBAN_COLUMNS.find((c) => c.key === overId);
+    const targetCol = isDropOnColumn ? overId : findColumn(overId);
     if (!targetCol) return;
 
-    if (targetCol === 'in-progress') {
-      // Move to active section, mark active
-      if (task.status !== 'active' || task.pipelineSection !== 'active') {
-        onUpdate(taskId, { status: 'active', pipelineSection: 'active' } as any);
+    const fromCol = findColumn(taskId);
+    const updates: Record<string, unknown> = {};
+
+    // Cross-column: change status/section
+    if (fromCol !== targetCol) {
+      if (targetCol === 'in-progress') {
+        updates.status = 'active';
+        updates.pipelineSection = 'active';
+      } else if (targetCol === 'todo') {
+        updates.status = 'active';
+        updates.pipelineSection = 'queued';
+      } else if (targetCol === 'done') {
+        updates.status = 'completed';
       }
-    } else if (targetCol === 'todo') {
-      // Move to queued section
-      if (task.status !== 'active' || task.pipelineSection === 'active') {
-        onUpdate(taskId, { status: 'active', pipelineSection: 'queued' } as any);
+    }
+
+    // Reorder within column
+    if (!isDropOnColumn) {
+      const targetList = columns[targetCol] || [];
+      const overIndex = targetList.findIndex((t) => t._id === overId);
+      const fromIndex = targetList.findIndex((t) => t._id === taskId);
+
+      if (fromCol === targetCol && fromIndex < overIndex) {
+        const afterOver = overIndex < targetList.length - 1 ? targetList[overIndex + 1].pipelineOrder : null;
+        updates.pipelineOrder = generateKeyBetween(targetList[overIndex].pipelineOrder, afterOver);
+      } else {
+        const prev = overIndex > 0 ? targetList[overIndex - 1].pipelineOrder : null;
+        updates.pipelineOrder = generateKeyBetween(prev, targetList[overIndex]?.pipelineOrder ?? null);
       }
-    } else if (targetCol === 'done') {
-      if (task.status !== 'completed') {
-        onUpdate(taskId, { status: 'completed' } as any);
-      }
+    }
+
+    if (Object.keys(updates).length > 0) {
+      onUpdate(taskId, updates as any);
     }
   }
 

@@ -8,6 +8,7 @@ import {
 import { SortableContext, verticalListSortingStrategy, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { SortableTaskRow } from '@/components/tasks/SortableTaskRow';
 import { DroppableSection } from './DroppableSection';
+import { generateKeyBetween } from '@/lib/ordering';
 import type { Task, Group, TeamMember } from '@/types';
 
 type EnergyKey = 'quick' | 'deep' | 'people' | 'hands-on';
@@ -42,7 +43,8 @@ export function EnergyView({ tasks, groups, members, onComplete, onDelete, onUpd
   const grouped: Record<string, Task[]> = {};
   for (const s of ENERGY_SECTIONS) {
     const k = s.key ?? 'untagged';
-    grouped[k] = active.filter((t) => s.key === null ? !t.energy : t.energy === s.key);
+    grouped[k] = active.filter((t) => s.key === null ? !t.energy : t.energy === s.key)
+      .sort((a, b) => a.pipelineOrder.localeCompare(b.pipelineOrder));
   }
 
   const activeTask = activeId ? active.find((t) => t._id === activeId) : null;
@@ -60,26 +62,44 @@ export function EnergyView({ tasks, groups, members, onComplete, onDelete, onUpd
     setActiveId(null);
     setOverSection(null);
     const { active: dragActive, over } = event;
-    if (!over) return;
-    const overId = over.id as string;
+    if (!over || dragActive.id === over.id) return;
     const taskId = dragActive.id as string;
+    const overId = over.id as string;
+    const task = active.find((t) => t._id === taskId);
+    if (!task) return;
 
-    // Determine target energy value
-    let targetEnergy: string | null = null;
-    const directSection = ENERGY_SECTIONS.find((s) => (s.key ?? 'untagged') === overId);
-    if (directSection) {
-      targetEnergy = directSection.key;
-    } else {
-      const section = findSection(overId);
-      if (section) {
-        const s = ENERGY_SECTIONS.find((e) => (e.key ?? 'untagged') === section);
-        targetEnergy = s?.key ?? null;
+    // Find target section
+    const isDropOnSection = ENERGY_SECTIONS.find((s) => (s.key ?? 'untagged') === overId);
+    const toSectionKey = isDropOnSection ? (isDropOnSection.key ?? 'untagged') : findSection(overId);
+    if (!toSectionKey) return;
+    const toEnergy = toSectionKey === 'untagged' ? null : toSectionKey;
+    const fromSectionKey = task.energy ?? 'untagged';
+
+    const updates: Record<string, unknown> = {};
+
+    // Cross-section: change energy tag
+    if (fromSectionKey !== toSectionKey) {
+      updates.energy = toEnergy;
+    }
+
+    // Reorder within section (or position in new section)
+    if (!isDropOnSection) {
+      const targetList = grouped[toSectionKey] || [];
+      const overIndex = targetList.findIndex((t) => t._id === overId);
+      const fromIndex = targetList.findIndex((t) => t._id === taskId);
+
+      if (fromSectionKey === toSectionKey && fromIndex < overIndex) {
+        const afterOver = overIndex < targetList.length - 1 ? targetList[overIndex + 1].pipelineOrder : null;
+        updates.pipelineOrder = generateKeyBetween(targetList[overIndex].pipelineOrder, afterOver);
+      } else {
+        const prev = overIndex > 0 ? targetList[overIndex - 1].pipelineOrder : null;
+        updates.pipelineOrder = generateKeyBetween(prev, targetList[overIndex]?.pipelineOrder ?? null);
       }
     }
 
-    const task = active.find((t) => t._id === taskId);
-    if (!task || task.energy === targetEnergy) return;
-    onUpdate(taskId, { energy: targetEnergy } as any);
+    if (Object.keys(updates).length > 0) {
+      onUpdate(taskId, updates as any);
+    }
   }
 
   return (
