@@ -39,6 +39,16 @@ body {
   }
 }
 
+/* Prism syntax highlighting — dark theme */
+.token.comment, .token.prolog, .token.doctype, .token.cdata { color: #5a5850; }
+.token.punctuation { color: #8a8880; }
+.token.property, .token.tag, .token.boolean, .token.number, .token.constant, .token.symbol { color: #d4a843; }
+.token.selector, .token.attr-name, .token.string, .token.char, .token.builtin { color: #5a9a6a; }
+.token.operator, .token.entity, .token.url { color: #8a8880; }
+.token.atrule, .token.attr-value, .token.keyword { color: #5a7a9a; }
+.token.function, .token.class-name { color: #c4883a; }
+.token.regex, .token.important, .token.variable { color: #c45a5a; }
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }

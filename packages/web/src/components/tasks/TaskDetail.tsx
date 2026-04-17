@@ -19,6 +19,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { api } from '@/lib/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { SwipeToDelete } from './SwipeToDelete';
+import { Conversation } from './Conversation';
 import type { Task, TeamMember, Subtask } from '@/types';
 
 function SortableSubtaskRow({
@@ -342,6 +343,9 @@ export function TaskDetail({ task, members, onUpdate }: TaskDetailProps) {
           />
         </form>
       </div>
+
+      {/* Conversation */}
+      <Conversation taskId={task._id} members={members} />
     </div>
   );
 }

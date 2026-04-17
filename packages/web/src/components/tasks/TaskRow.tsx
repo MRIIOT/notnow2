@@ -11,13 +11,14 @@ interface TaskRowProps {
   showGroup?: boolean;
   groups?: Group[];
   members?: TeamMember[];
+  messageCount?: number;
   dragListeners?: SyntheticListenerMap;
   onComplete: (taskId: string) => void;
   onDelete: (taskId: string) => void;
   onUpdate: (taskId: string, data: Partial<Task>) => void;
 }
 
-export function TaskRow({ task, rank, showGroup, groups, members, dragListeners, onComplete, onDelete, onUpdate }: TaskRowProps) {
+export function TaskRow({ task, rank, showGroup, groups, members, messageCount, dragListeners, onComplete, onDelete, onUpdate }: TaskRowProps) {
   const selectedTaskId = useUIStore((s) => s.selectedTaskId);
   const selectTask = useUIStore((s) => s.selectTask);
 
@@ -84,6 +85,11 @@ export function TaskRow({ task, rank, showGroup, groups, members, dragListeners,
             : 'text-text-tertiary border-border'
         }`}>
           {task.subtasks.filter((s) => s.completed).length}/{task.subtasks.length}
+        </span>
+      )}
+      {messageCount !== undefined && messageCount > 0 && (
+        <span className="font-mono text-[9px] shrink-0 text-text-tertiary border border-border rounded-full w-[22px] h-[16px] flex items-center justify-center" title={`${messageCount} messages`}>
+          &#128172;{messageCount}
         </span>
       )}
       <div className="flex items-center gap-2 shrink-0">

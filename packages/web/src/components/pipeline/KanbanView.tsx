@@ -21,12 +21,13 @@ interface Props {
   tasks: Task[];
   groups: Group[];
   members?: TeamMember[];
+  messageCounts?: Record<string, number>;
   onComplete: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdate: (id: string, data: Partial<Task>) => void;
 }
 
-export function KanbanView({ tasks, groups, members, onComplete, onDelete, onUpdate }: Props) {
+export function KanbanView({ tasks, groups, members, messageCounts, onComplete, onDelete, onUpdate }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overSection, setOverSection] = useState<string | null>(null);
 
@@ -122,7 +123,7 @@ export function KanbanView({ tasks, groups, members, onComplete, onDelete, onUpd
           >
             <SortableContext items={colTasks.map((t) => t._id)} strategy={verticalListSortingStrategy}>
               {colTasks.map((t) => (
-                <SortableTaskRow key={t._id} task={t} showGroup groups={groups} members={members}
+                <SortableTaskRow key={t._id} task={t} showGroup groups={groups} members={members} messageCount={messageCounts?.[t._id]}
                   onComplete={onComplete} onDelete={onDelete} onUpdate={onUpdate} />
               ))}
             </SortableContext>

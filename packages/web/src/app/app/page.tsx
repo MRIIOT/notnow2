@@ -20,6 +20,7 @@ import {
 import { useTasks } from '@/hooks/useTasks';
 import { useGroups } from '@/hooks/useGroups';
 import { useTeam } from '@/hooks/useTeam';
+import { useMessageCounts } from '@/hooks/useMessageCounts';
 import { useUIStore } from '@/stores/uiStore';
 import { SortableTaskRow } from '@/components/tasks/SortableTaskRow';
 import { TaskSkeleton, EmptyState } from '@/components/tasks/TaskSkeleton';
@@ -53,6 +54,7 @@ export default function PipelinePage() {
   const { tasks, isLoading, updateTask, deleteTask, reorderTask } = useTasks('pipeline');
   const { groups } = useGroups();
   const { team } = useTeam();
+  const msgCounts = useMessageCounts();
   const [activeTab, setActiveTab] = useState<PipelineTab>('pipeline');
   const setActiveView = useUIStore((s) => s.setActiveView);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -163,7 +165,7 @@ export default function PipelinePage() {
                   <SortableContext items={sectionTasks.map((t) => t._id)} strategy={verticalListSortingStrategy}>
                     {sectionTasks.map((t) => (
                       <SortableTaskRow key={t._id} task={t} rank={showRank ? rank++ : undefined}
-                        showGroup groups={groups} members={team?.members}
+                        showGroup groups={groups} members={team?.members} messageCount={msgCounts[t._id]}
                         onComplete={handleComplete} onDelete={handleDelete} onUpdate={handleUpdate}
                       />
                     ))}
@@ -184,13 +186,13 @@ export default function PipelinePage() {
             </DragOverlay>
           </DndContext>
         ) : activeTab === 'energy' ? (
-          <EnergyView tasks={tasks} groups={groups} members={team?.members}
+          <EnergyView tasks={tasks} groups={groups} members={team?.members} messageCounts={msgCounts}
             onComplete={handleComplete} onDelete={handleDelete} onUpdate={handleUpdate} />
         ) : activeTab === 'priority' ? (
-          <PriorityView tasks={tasks} groups={groups} members={team?.members}
+          <PriorityView tasks={tasks} groups={groups} members={team?.members} messageCounts={msgCounts}
             onComplete={handleComplete} onDelete={handleDelete} onUpdate={handleUpdate} />
         ) : (
-          <KanbanView tasks={tasks} groups={groups} members={team?.members}
+          <KanbanView tasks={tasks} groups={groups} members={team?.members} messageCounts={msgCounts}
             onComplete={handleComplete} onDelete={handleDelete} onUpdate={handleUpdate} />
         )}
       </div>
