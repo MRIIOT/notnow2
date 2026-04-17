@@ -20,6 +20,7 @@ import {
 import { useTasks } from '@/hooks/useTasks';
 import { useGroups } from '@/hooks/useGroups';
 import { useTeam } from '@/hooks/useTeam';
+import { useUIStore } from '@/stores/uiStore';
 import { SortableTaskRow } from '@/components/tasks/SortableTaskRow';
 import { TaskSkeleton, EmptyState } from '@/components/tasks/TaskSkeleton';
 import { DroppableSection } from '@/components/pipeline/DroppableSection';
@@ -53,6 +54,7 @@ export default function PipelinePage() {
   const { groups } = useGroups();
   const { team } = useTeam();
   const [activeTab, setActiveTab] = useState<PipelineTab>('pipeline');
+  const setActiveView = useUIStore((s) => s.setActiveView);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overSection, setOverSection] = useState<Section | null>(null);
 
@@ -130,7 +132,7 @@ export default function PipelinePage() {
           {TABS.map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => { setActiveTab(tab.key); setActiveView(tab.key); }}
               className={`font-mono text-[11px] px-3 py-1.5 rounded-t transition-all ${
                 activeTab === tab.key
                   ? 'text-accent bg-bg border-t border-x border-border-subtle -mb-px'

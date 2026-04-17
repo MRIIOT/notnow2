@@ -13,6 +13,7 @@ import type { Task } from '@/types';
 export function DetailPane() {
   const selectedTaskId = useUIStore((s) => s.selectedTaskId);
   const selectTask = useUIStore((s) => s.selectTask);
+  const activeView = useUIStore((s) => s.activeView);
   const teamId = useAuthStore((s) => s.activeTeamId);
   const { team } = useTeam();
   const qc = useQueryClient();
@@ -68,32 +69,52 @@ export function DetailPane() {
   const handleMove = useCallback((direction: 'up' | 'down') => {
     if (!task || !pipelineTasks || !teamId) return;
 
+    // Determine which order field and grouping to use based on active view
+    type OrderField = 'pipelineOrder' | 'energyOrder' | 'priorityOrder' | 'kanbanOrder' | 'groupOrder';
+    let orderField: OrderField = 'pipelineOrder';
+    let groupFn: (t: Task) => string = (t) => t.pipelineSection;
+
+    if (activeView === 'energy') {
+      orderField = 'energyOrder';
+      groupFn = (t) => t.energy ?? 'untagged';
+    } else if (activeView === 'priority') {
+      orderField = 'priorityOrder';
+      groupFn = (t) => t.importance ?? 'untagged';
+    } else if (activeView === 'kanban') {
+      orderField = 'kanbanOrder';
+      groupFn = (t) => t.status === 'completed' ? 'done' : t.pipelineSection === 'active' ? 'in-progress' : 'todo';
+    } else if (activeView === 'group') {
+      orderField = 'groupOrder';
+      groupFn = (t) => t.groupId;
+    }
+
+    const taskGroup = groupFn(task);
     const sectionTasks = pipelineTasks
-      .filter((t) => t.pipelineSection === task.pipelineSection && t.status === 'active')
-      .sort((a, b) => a.pipelineOrder.localeCompare(b.pipelineOrder));
+      .filter((t) => groupFn(t) === taskGroup && t.status === 'active')
+      .sort((a, b) => a[orderField].localeCompare(b[orderField]));
 
     const idx = sectionTasks.findIndex((t) => t._id === task._id);
     if (idx === -1) return;
 
     let newOrder: string;
     if (direction === 'up' && idx > 0) {
-      const prev = idx > 1 ? sectionTasks[idx - 2].pipelineOrder : null;
-      newOrder = generateKeyBetween(prev, sectionTasks[idx - 1].pipelineOrder);
+      const prev = idx > 1 ? sectionTasks[idx - 2][orderField] : null;
+      newOrder = generateKeyBetween(prev, sectionTasks[idx - 1][orderField]);
     } else if (direction === 'down' && idx < sectionTasks.length - 1) {
-      const next = idx < sectionTasks.length - 2 ? sectionTasks[idx + 2].pipelineOrder : null;
-      newOrder = generateKeyBetween(sectionTasks[idx + 1].pipelineOrder, next);
+      const next = idx < sectionTasks.length - 2 ? sectionTasks[idx + 2][orderField] : null;
+      newOrder = generateKeyBetween(sectionTasks[idx + 1][orderField], next);
     } else {
       return;
     }
 
     api(`/teams/${teamId}/tasks/${task._id}/reorder`, {
       method: 'POST',
-      body: JSON.stringify({ pipelineOrder: newOrder }),
+      body: JSON.stringify({ [orderField]: newOrder }),
     }).then(() => {
       qc.invalidateQueries({ queryKey: ['tasks', teamId] });
       qc.invalidateQueries({ queryKey: ['task', teamId, task._id] });
     });
-  }, [task, pipelineTasks, teamId, qc]);
+  }, [task, pipelineTasks, teamId, qc, activeView]);
 
   // Empty state — desktop only
   if (!selectedTaskId) {

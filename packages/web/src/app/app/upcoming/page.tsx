@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useUIStore } from '@/stores/uiStore';
 import { useTasks } from '@/hooks/useTasks';
 import { useGroups } from '@/hooks/useGroups';
 import { useTeam } from '@/hooks/useTeam';
@@ -26,6 +28,8 @@ function getWeekBucket(dateStr: string | null): string {
 }
 
 export default function UpcomingPage() {
+  const setActiveView = useUIStore((s) => s.setActiveView);
+  useEffect(() => { setActiveView('upcoming'); }, [setActiveView]);
   const { tasks, updateTask, deleteTask } = useTasks('upcoming');
   const { groups } = useGroups();
   const { team } = useTeam();

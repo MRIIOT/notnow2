@@ -1,6 +1,7 @@
 'use client';
 
-import { use, useState } from 'react';
+import { use, useState, useEffect } from 'react';
+import { useUIStore } from '@/stores/uiStore';
 import {
   DndContext,
   closestCenter,
@@ -33,7 +34,10 @@ export default function GroupPage({ params }: { params: Promise<{ groupId: strin
   const { tasks, isLoading, createTask, updateTask, deleteTask, reorderTask } = useTasks('group', groupId);
   const { groups } = useGroups();
   const { team } = useTeam();
+  const setActiveView = useUIStore((s) => s.setActiveView);
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  useEffect(() => { setActiveView('group'); }, [setActiveView]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
