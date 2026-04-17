@@ -3,6 +3,8 @@ import { useAuthStore } from '@/stores/authStore';
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 const BASE = `${API_URL}/api/v1`;
 
+let isRefreshing: Promise<string | null> | null = null;
+
 async function refreshToken(): Promise<string | null> {
   try {
     const stored = localStorage.getItem('refreshToken');
@@ -15,6 +17,8 @@ async function refreshToken(): Promise<string | null> {
     });
     if (!res.ok) {
       localStorage.removeItem('refreshToken');
+      useAuthStore.getState().logout();
+      window.location.href = '/auth/login';
       return null;
     }
     const data = await res.json();
@@ -39,9 +43,12 @@ export async function api<T = unknown>(path: string, options: RequestInit = {}):
 
   let res = await fetch(`${BASE}${path}`, { ...options, headers });
 
-  // If 401 try refresh
-  if (res.status === 401 && accessToken) {
-    const newToken = await refreshToken();
+  // If 401 try refresh (deduplicate concurrent refresh calls)
+  if (res.status === 401) {
+    if (!isRefreshing) {
+      isRefreshing = refreshToken().finally(() => { isRefreshing = null; });
+    }
+    const newToken = await isRefreshing;
     if (newToken) {
       headers['Authorization'] = `Bearer ${newToken}`;
       res = await fetch(`${BASE}${path}`, { ...options, headers });

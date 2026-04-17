@@ -15,7 +15,7 @@ const router = Router();
 const REFRESH_TOKEN_DAYS = 30;
 
 function signAccessToken(userId: string, username: string): string {
-  return jwt.sign({ userId, username }, env.JWT_SECRET, { expiresIn: '15m' });
+  return jwt.sign({ userId, username }, env.JWT_SECRET, { expiresIn: '7d' });
 }
 
 async function createRefreshTokenValue(userId: string): Promise<string> {
