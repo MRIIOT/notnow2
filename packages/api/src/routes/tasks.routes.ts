@@ -62,7 +62,17 @@ router.get('/', authenticate, authorize(), async (req: Request, res: Response, n
     const view = req.query.view as string | undefined;
     const groupId = req.query.groupId as string | undefined;
     const status = req.query.status as string | undefined;
+    const q = req.query.q as string | undefined;
     const filter: Record<string, unknown> = { teamId: req.params.teamId };
+
+    // Text search
+    if (q) {
+      filter.title = { $regex: q, $options: 'i' };
+      filter.status = { $ne: 'deleted' };
+      const tasks = await Task.find(filter).sort({ updatedAt: -1 }).limit(10);
+      res.json({ tasks });
+      return;
+    }
 
     if (status) {
       filter.status = status;

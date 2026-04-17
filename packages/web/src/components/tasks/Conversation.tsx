@@ -6,7 +6,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
 import { api } from '@/lib/api';
 import { MessageBody } from './MessageBody';
-import type { TeamMember } from '@/types';
+import type { Task, TeamMember } from '@/types';
 
 interface Message {
   _id: string;
@@ -51,6 +51,9 @@ export function Conversation({ taskId, members }: ConversationProps) {
   const [body, setBody] = useState('');
   const [showMentions, setShowMentions] = useState(false);
   const [mentionFilter, setMentionFilter] = useState('');
+  const [showTaskRef, setShowTaskRef] = useState(false);
+  const [taskFilter, setTaskFilter] = useState('');
+  const [taskSuggestions, setTaskSuggestions] = useState<Task[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -97,23 +100,63 @@ export function Conversation({ taskId, members }: ConversationProps) {
     setBody('');
   };
 
+  // Search tasks when # filter changes
+  useEffect(() => {
+    if (!showTaskRef || !taskFilter || !teamId) {
+      setTaskSuggestions([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const data = await api<{ tasks: Task[] }>(`/teams/${teamId}/tasks?q=${encodeURIComponent(taskFilter)}`);
+        setTaskSuggestions(data.tasks.filter((t) => t._id !== taskId)); // exclude current task
+      } catch {
+        setTaskSuggestions([]);
+      }
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [showTaskRef, taskFilter, teamId, taskId]);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Cmd/Ctrl+Enter to send
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       handleSubmit(e);
       return;
     }
 
-    // Detect @ for mentions
     if (e.key === '@') {
       setShowMentions(true);
       setMentionFilter('');
+      setShowTaskRef(false);
     }
   };
 
   const handleInput = (val: string) => {
     setBody(val);
+
+    // Detect # trigger
+    const lastHash = val.lastIndexOf('#');
+    if (lastHash >= 0) {
+      const after = val.slice(lastHash + 1);
+      const spaceIdx = after.indexOf(' ');
+      const newlineIdx = after.indexOf('\n');
+      const endIdx = Math.min(
+        spaceIdx === -1 ? Infinity : spaceIdx,
+        newlineIdx === -1 ? Infinity : newlineIdx
+      );
+      if (endIdx === Infinity && after.length > 0) {
+        setShowTaskRef(true);
+        setTaskFilter(after);
+        setShowMentions(false);
+      } else if (after.length === 0) {
+        setShowTaskRef(true);
+        setTaskFilter('');
+      } else {
+        setShowTaskRef(false);
+      }
+    } else {
+      setShowTaskRef(false);
+    }
 
     // Track mention filter
     if (showMentions) {
@@ -137,6 +180,15 @@ export function Conversation({ taskId, members }: ConversationProps) {
     const newBody = body.slice(0, lastAt) + `@${username} `;
     setBody(newBody);
     setShowMentions(false);
+    inputRef.current?.focus();
+  };
+
+  const insertTaskRef = (task: Task) => {
+    const lastHash = body.lastIndexOf('#');
+    const newBody = body.slice(0, lastHash) + `#${task._id} `;
+    setBody(newBody);
+    setShowTaskRef(false);
+    setTaskSuggestions([]);
     inputRef.current?.focus();
   };
 
@@ -178,7 +230,7 @@ export function Conversation({ taskId, members }: ConversationProps) {
       {/* Input */}
       <form onSubmit={handleSubmit} className="relative">
         {showMentions && filteredMembers.length > 0 && (
-          <div className="absolute bottom-full mb-1 left-0 right-0 bg-bg-raised border border-border rounded-lg shadow-xl z-10 max-h-[120px] overflow-y-auto">
+          <div className="absolute bottom-full mb-1 left-0 right-0 bg-bg-raised border border-border rounded-lg shadow-xl z-10 max-h-[150px] overflow-y-auto">
             {filteredMembers.map((m) => (
               <button
                 key={m.userId}
@@ -187,6 +239,21 @@ export function Conversation({ taskId, members }: ConversationProps) {
                 className="w-full text-left px-3 py-1.5 font-mono text-[11px] text-text-secondary hover:bg-bg-hover hover:text-text transition-all"
               >
                 @{m.username}
+              </button>
+            ))}
+          </div>
+        )}
+        {showTaskRef && taskSuggestions.length > 0 && (
+          <div className="absolute bottom-full mb-1 left-0 right-0 bg-bg-raised border border-border rounded-lg shadow-xl z-10 max-h-[150px] overflow-y-auto">
+            {taskSuggestions.map((t) => (
+              <button
+                key={t._id}
+                type="button"
+                onClick={() => insertTaskRef(t)}
+                className="w-full text-left px-3 py-1.5 text-[11px] hover:bg-bg-hover hover:text-text transition-all flex items-center gap-2"
+              >
+                <span className="font-mono text-accent">#{t._id.slice(-6)}</span>
+                <span className="text-text-secondary truncate">{t.title}</span>
               </button>
             ))}
           </div>
