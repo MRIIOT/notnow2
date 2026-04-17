@@ -126,7 +126,6 @@ export function MessageBody({ body, onTaskClick }: MessageBodyProps) {
               </button>
             );
           }
-            );
           case 'inlineCode':
             return (
               <code key={i} className="font-mono text-[11px] bg-bg-active text-accent rounded px-1.5 py-[1px]">
