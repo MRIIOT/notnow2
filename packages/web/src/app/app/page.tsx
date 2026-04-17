@@ -8,7 +8,6 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  useDroppable,
   type DragEndEvent,
   type DragStartEvent,
   type DragOverEvent,
@@ -23,6 +22,7 @@ import { useGroups } from '@/hooks/useGroups';
 import { useTeam } from '@/hooks/useTeam';
 import { SortableTaskRow } from '@/components/tasks/SortableTaskRow';
 import { TaskSkeleton, EmptyState } from '@/components/tasks/TaskSkeleton';
+import { DroppableSection } from '@/components/pipeline/DroppableSection';
 import { EnergyView } from '@/components/pipeline/EnergyView';
 import { PriorityView } from '@/components/pipeline/PriorityView';
 import { KanbanView } from '@/components/pipeline/KanbanView';
@@ -47,32 +47,6 @@ const SECTION_CONFIG: Record<Section, { label: string; color: string; lineColor:
   someday: { label: 'Someday', color: 'text-text-tertiary', lineColor: 'bg-border-subtle' },
 };
 
-function DroppableSection({
-  id, children, label, color, lineColor, isEmpty, overSection,
-}: {
-  id: Section; children: React.ReactNode; label: string; color: string;
-  lineColor: string; isEmpty: boolean; overSection: Section | null;
-}) {
-  const { setNodeRef, isOver } = useDroppable({ id });
-  const isHighlighted = isOver || overSection === id;
-
-  return (
-    <div className="mb-2">
-      <div className={`font-mono text-[10px] font-semibold uppercase tracking-[1.5px] ${color} pt-3 pb-1.5 flex items-center gap-2`}>
-        {label}
-        <div className={`flex-1 h-px ${lineColor}`} />
-      </div>
-      <div ref={setNodeRef} className={`min-h-[36px] rounded transition-colors ${isHighlighted ? 'bg-bg-hover ring-1 ring-accent/30' : ''}`}>
-        {children}
-        {isEmpty && (
-          <div className={`flex items-center justify-center py-3 text-[11px] font-mono transition-colors ${isHighlighted ? 'text-text-secondary' : 'text-text-tertiary opacity-40'}`}>
-            {isHighlighted ? 'Drop here' : 'Empty'}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 export default function PipelinePage() {
   const { tasks, isLoading, updateTask, deleteTask, reorderTask } = useTasks('pipeline');

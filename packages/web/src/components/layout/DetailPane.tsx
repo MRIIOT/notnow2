@@ -98,7 +98,7 @@ export function DetailPane() {
   // Empty state — desktop only
   if (!selectedTaskId) {
     return (
-      <div className="hidden md:flex w-[380px] bg-bg-surface border-l border-border items-center justify-center shrink-0">
+      <div className="hidden md:flex w-[456px] bg-bg-surface border-l border-border items-center justify-center shrink-0">
         <p className="text-text-tertiary text-[12px] font-mono">Select a task</p>
       </div>
     );
@@ -142,7 +142,7 @@ export function DetailPane() {
   return (
     <>
       {/* Desktop: right pane */}
-      <div className="hidden md:flex w-[380px] bg-bg-surface border-l border-border flex-col shrink-0 overflow-hidden">
+      <div className="hidden md:flex w-[456px] bg-bg-surface border-l border-border flex-col shrink-0 overflow-hidden">
         {content}
       </div>
 
