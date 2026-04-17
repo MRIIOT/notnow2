@@ -64,7 +64,7 @@ export function Topbar() {
   };
 
   return (
-    <div className="h-11 bg-bg border-b border-border flex items-center justify-between px-4 shrink-0 z-10">
+    <div className="h-11 bg-bg border-b border-border flex items-center justify-between px-4 shrink-0 z-50">
       <div className="flex items-center gap-3">
         <button
           onClick={toggleSidebar}
