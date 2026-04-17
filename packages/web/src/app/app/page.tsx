@@ -30,7 +30,7 @@ import { generateKeyBetween } from '@/lib/ordering';
 import type { Task } from '@/types';
 
 type PipelineTab = 'pipeline' | 'energy' | 'priority' | 'kanban';
-type Section = 'above' | 'below' | 'waiting' | 'someday';
+type Section = 'active' | 'queued' | 'waiting' | 'someday';
 
 const TABS: { key: PipelineTab; label: string }[] = [
   { key: 'pipeline', label: 'Pipeline' },
@@ -39,11 +39,11 @@ const TABS: { key: PipelineTab; label: string }[] = [
   { key: 'kanban', label: 'Kanban' },
 ];
 
-const SECTION_ORDER: Section[] = ['waiting', 'above', 'below', 'someday'];
+const SECTION_ORDER: Section[] = ['waiting', 'active', 'queued', 'someday'];
 const SECTION_CONFIG: Record<Section, { label: string; color: string; lineColor: string }> = {
   waiting: { label: 'Waiting', color: 'text-blue', lineColor: 'bg-blue-dim' },
-  above: { label: 'Active', color: 'text-accent', lineColor: 'bg-accent-dim' },
-  below: { label: 'Below the line', color: 'text-text-secondary', lineColor: 'bg-border' },
+  active: { label: 'Active', color: 'text-accent', lineColor: 'bg-accent-dim' },
+  queued: { label: 'Queued', color: 'text-text-secondary', lineColor: 'bg-border' },
   someday: { label: 'Someday', color: 'text-text-tertiary', lineColor: 'bg-border-subtle' },
 };
 
@@ -89,8 +89,8 @@ export default function PipelinePage() {
 
   const activeTasks = tasks.filter((t) => t.status === 'active');
   const sections: Record<Section, Task[]> = {
-    above: activeTasks.filter((t) => t.pipelineSection === 'above'),
-    below: activeTasks.filter((t) => t.pipelineSection === 'below'),
+    active: activeTasks.filter((t) => t.pipelineSection === 'active'),
+    queued: activeTasks.filter((t) => t.pipelineSection === 'queued'),
     waiting: activeTasks.filter((t) => t.pipelineSection === 'waiting'),
     someday: activeTasks.filter((t) => t.pipelineSection === 'someday'),
   };
@@ -178,7 +178,7 @@ export default function PipelinePage() {
             {SECTION_ORDER.map((sectionKey) => {
               const config = SECTION_CONFIG[sectionKey];
               const sectionTasks = sections[sectionKey];
-              const showRank = sectionKey === 'above' || sectionKey === 'below';
+              const showRank = sectionKey === 'active' || sectionKey === 'queued';
               return (
                 <DroppableSection
                   key={sectionKey} id={sectionKey} label={config.label} color={config.color}

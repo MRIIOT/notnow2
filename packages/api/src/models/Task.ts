@@ -13,7 +13,7 @@ export interface ITask extends Document {
   title: string;
   notes: string;
   status: 'active' | 'completed' | 'deleted';
-  pipelineSection: 'above' | 'below' | 'waiting' | 'someday';
+  pipelineSection: 'active' | 'queued' | 'waiting' | 'someday';
   pipelineOrder: string;
   groupOrder: string;
   assignees: Types.ObjectId[];
@@ -49,8 +49,8 @@ const taskSchema = new Schema<ITask>(
     pipelineSection: {
       type: String,
       required: true,
-      enum: ['above', 'below', 'waiting', 'someday'],
-      default: 'above',
+      enum: ['active', 'queued', 'waiting', 'someday'],
+      default: 'active',
     },
     pipelineOrder: { type: String, default: 'a0' },
     groupOrder: { type: String, default: 'a0' },

@@ -21,8 +21,8 @@ interface Props {
 
 export function KanbanView({ tasks, groups, members, onComplete, onDelete, onUpdate }: Props) {
   // Map task status/section to kanban columns
-  const inProgress = tasks.filter((t) => t.status === 'active' && t.pipelineSection === 'above');
-  const todo = tasks.filter((t) => t.status === 'active' && t.pipelineSection !== 'above');
+  const inProgress = tasks.filter((t) => t.status === 'active' && t.pipelineSection === 'active');
+  const todo = tasks.filter((t) => t.status === 'active' && t.pipelineSection !== 'active');
   const done = tasks.filter((t) => t.status === 'completed');
 
   const columns = [

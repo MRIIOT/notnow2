@@ -100,7 +100,7 @@ export function useTasks(view: string, groupId?: string) {
         ) as Task[]).sort((a, b) => {
           // Sort by section then by the relevant order field
           if (view === 'group') return a.groupOrder.localeCompare(b.groupOrder);
-          const sectionOrder = { above: 0, below: 1, waiting: 2, someday: 3 };
+          const sectionOrder = { waiting: 0, active: 1, queued: 2, someday: 3 };
           const sa = sectionOrder[a.pipelineSection as keyof typeof sectionOrder] ?? 0;
           const sb = sectionOrder[b.pipelineSection as keyof typeof sectionOrder] ?? 0;
           if (sa !== sb) return sa - sb;

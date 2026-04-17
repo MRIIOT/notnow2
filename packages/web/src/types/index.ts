@@ -43,7 +43,7 @@ export interface Task {
   title: string;
   notes: string;
   status: 'active' | 'completed' | 'deleted';
-  pipelineSection: 'above' | 'below' | 'waiting' | 'someday';
+  pipelineSection: 'active' | 'queued' | 'waiting' | 'someday';
   pipelineOrder: string;
   groupOrder: string;
   assignees: string[];

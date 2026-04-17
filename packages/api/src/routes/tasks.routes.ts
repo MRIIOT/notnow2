@@ -25,7 +25,7 @@ router.post('/', authenticate, authorize(), validate(createTaskSchema), async (r
     const lastPipeline = await Task.findOne({
       teamId: req.params.teamId,
       status: 'active',
-      pipelineSection: pipelineSection || 'above',
+      pipelineSection: pipelineSection || 'active',
     }).sort({ pipelineOrder: -1 });
 
     const lastGroup = await Task.findOne({
@@ -41,7 +41,7 @@ router.post('/', authenticate, authorize(), validate(createTaskSchema), async (r
       groupId,
       title,
       notes: notes || '',
-      pipelineSection: pipelineSection || 'above',
+      pipelineSection: pipelineSection || 'active',
       pipelineOrder,
       groupOrder,
       dueDate: dueDate || null,

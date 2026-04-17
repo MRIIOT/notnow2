@@ -173,8 +173,8 @@ export function TaskDetail({ task, members, onUpdate }: TaskDetailProps) {
       {/* Pipeline section */}
       <div className="flex items-center gap-1.5 mb-3 flex-wrap">
         <span className="font-mono text-[10px] uppercase tracking-wider text-text-tertiary">Section:</span>
-        {(['waiting', 'above', 'below', 'someday'] as const).map((section) => {
-          const labels: Record<string, string> = { waiting: 'Waiting', above: 'Active', below: 'Below', someday: 'Someday' };
+        {(['waiting', 'active', 'queued', 'someday'] as const).map((section) => {
+          const labels: Record<string, string> = { waiting: 'Waiting', active: 'Active', queued: 'Queued', someday: 'Someday' };
           return (
             <button
               key={section}
