@@ -36,9 +36,9 @@ export function KanbanView({ tasks, groups, members, onComplete, onDelete, onUpd
   );
 
   const inProgress = tasks.filter((t) => t.status === 'active' && t.pipelineSection === 'active')
-    .sort((a, b) => a.pipelineOrder.localeCompare(b.pipelineOrder));
+    .sort((a, b) => a.kanbanOrder.localeCompare(b.kanbanOrder));
   const todo = tasks.filter((t) => t.status === 'active' && t.pipelineSection !== 'active')
-    .sort((a, b) => a.pipelineOrder.localeCompare(b.pipelineOrder));
+    .sort((a, b) => a.kanbanOrder.localeCompare(b.kanbanOrder));
   const done = tasks.filter((t) => t.status === 'completed').slice(0, 10);
 
   const columns: Record<string, Task[]> = { 'in-progress': inProgress, 'todo': todo, 'done': done };
@@ -90,11 +90,11 @@ export function KanbanView({ tasks, groups, members, onComplete, onDelete, onUpd
       const fromIndex = targetList.findIndex((t) => t._id === taskId);
 
       if (fromCol === targetCol && fromIndex < overIndex) {
-        const afterOver = overIndex < targetList.length - 1 ? targetList[overIndex + 1].pipelineOrder : null;
-        updates.pipelineOrder = generateKeyBetween(targetList[overIndex].pipelineOrder, afterOver);
+        const afterOver = overIndex < targetList.length - 1 ? targetList[overIndex + 1].kanbanOrder : null;
+        updates.kanbanOrder = generateKeyBetween(targetList[overIndex].kanbanOrder, afterOver);
       } else {
-        const prev = overIndex > 0 ? targetList[overIndex - 1].pipelineOrder : null;
-        updates.pipelineOrder = generateKeyBetween(prev, targetList[overIndex]?.pipelineOrder ?? null);
+        const prev = overIndex > 0 ? targetList[overIndex - 1].kanbanOrder : null;
+        updates.kanbanOrder = generateKeyBetween(prev, targetList[overIndex]?.kanbanOrder ?? null);
       }
     }
 

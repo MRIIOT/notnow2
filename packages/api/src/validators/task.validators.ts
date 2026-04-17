@@ -17,6 +17,9 @@ export const updateTaskSchema = z.object({
   status: z.enum(['active', 'completed', 'deleted']).optional(),
   pipelineSection: z.enum(['active', 'queued', 'waiting', 'someday']).optional(),
   pipelineOrder: z.string().optional(),
+  energyOrder: z.string().optional(),
+  priorityOrder: z.string().optional(),
+  kanbanOrder: z.string().optional(),
   groupOrder: z.string().optional(),
   dueDate: z.string().datetime().nullable().optional(),
   energy: z.enum(['quick', 'deep', 'people', 'hands-on']).nullable().optional(),
@@ -36,6 +39,9 @@ export const updateGroupSchema = z.object({
 
 export const reorderTaskSchema = z.object({
   pipelineOrder: z.string().optional(),
+  energyOrder: z.string().optional(),
+  priorityOrder: z.string().optional(),
+  kanbanOrder: z.string().optional(),
   groupOrder: z.string().optional(),
   pipelineSection: z.enum(['active', 'queued', 'waiting', 'someday']).optional(),
 });

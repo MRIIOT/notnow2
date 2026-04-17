@@ -44,7 +44,7 @@ export function PriorityView({ tasks, groups, members, onComplete, onDelete, onU
   for (const s of PRIORITY_SECTIONS) {
     const k = s.key ?? 'untagged';
     grouped[k] = active.filter((t) => s.key === null ? !t.importance : t.importance === s.key)
-      .sort((a, b) => a.pipelineOrder.localeCompare(b.pipelineOrder));
+      .sort((a, b) => a.priorityOrder.localeCompare(b.priorityOrder));
   }
 
   const activeTask = activeId ? active.find((t) => t._id === activeId) : null;
@@ -86,11 +86,11 @@ export function PriorityView({ tasks, groups, members, onComplete, onDelete, onU
       const fromIndex = targetList.findIndex((t) => t._id === taskId);
 
       if (fromSectionKey === toSectionKey && fromIndex < overIndex) {
-        const afterOver = overIndex < targetList.length - 1 ? targetList[overIndex + 1].pipelineOrder : null;
-        updates.pipelineOrder = generateKeyBetween(targetList[overIndex].pipelineOrder, afterOver);
+        const afterOver = overIndex < targetList.length - 1 ? targetList[overIndex + 1].priorityOrder : null;
+        updates.priorityOrder = generateKeyBetween(targetList[overIndex].priorityOrder, afterOver);
       } else {
-        const prev = overIndex > 0 ? targetList[overIndex - 1].pipelineOrder : null;
-        updates.pipelineOrder = generateKeyBetween(prev, targetList[overIndex]?.pipelineOrder ?? null);
+        const prev = overIndex > 0 ? targetList[overIndex - 1].priorityOrder : null;
+        updates.priorityOrder = generateKeyBetween(prev, targetList[overIndex]?.priorityOrder ?? null);
       }
     }
 

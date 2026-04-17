@@ -15,6 +15,9 @@ export interface ITask extends Document {
   status: 'active' | 'completed' | 'deleted';
   pipelineSection: 'active' | 'queued' | 'waiting' | 'someday';
   pipelineOrder: string;
+  energyOrder: string;
+  priorityOrder: string;
+  kanbanOrder: string;
   groupOrder: string;
   assignees: Types.ObjectId[];
   dueDate: Date | null;
@@ -53,6 +56,9 @@ const taskSchema = new Schema<ITask>(
       default: 'active',
     },
     pipelineOrder: { type: String, default: 'a0' },
+    energyOrder: { type: String, default: 'a0' },
+    priorityOrder: { type: String, default: 'a0' },
+    kanbanOrder: { type: String, default: 'a0' },
     groupOrder: { type: String, default: 'a0' },
     assignees: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     dueDate: { type: Date, default: null },

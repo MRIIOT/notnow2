@@ -45,6 +45,9 @@ export interface Task {
   status: 'active' | 'completed' | 'deleted';
   pipelineSection: 'active' | 'queued' | 'waiting' | 'someday';
   pipelineOrder: string;
+  energyOrder: string;
+  priorityOrder: string;
+  kanbanOrder: string;
   groupOrder: string;
   assignees: string[];
   dueDate: string | null;

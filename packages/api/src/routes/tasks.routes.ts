@@ -157,6 +157,9 @@ router.post(
       if (!task) throw Errors.notFound('Task');
 
       if (req.body.pipelineOrder !== undefined) task.pipelineOrder = req.body.pipelineOrder;
+      if (req.body.energyOrder !== undefined) task.energyOrder = req.body.energyOrder;
+      if (req.body.priorityOrder !== undefined) task.priorityOrder = req.body.priorityOrder;
+      if (req.body.kanbanOrder !== undefined) task.kanbanOrder = req.body.kanbanOrder;
       if (req.body.groupOrder !== undefined) task.groupOrder = req.body.groupOrder;
       if (req.body.pipelineSection !== undefined) task.pipelineSection = req.body.pipelineSection;
 
