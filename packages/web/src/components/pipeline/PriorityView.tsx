@@ -14,10 +14,10 @@ import type { Task, Group, TeamMember } from '@/types';
 type ImportanceKey = 'urgent-important' | 'important' | 'urgent' | 'neither';
 
 const PRIORITY_SECTIONS: { key: ImportanceKey | null; label: string; sublabel: string; color: string; line: string }[] = [
-  { key: 'urgent-important', label: '██ Do Now', sublabel: 'Urgent + Important', color: 'text-red', line: 'bg-red-dim' },
-  { key: 'important', label: '█░ Schedule', sublabel: 'Important, not urgent', color: 'text-blue', line: 'bg-blue-dim' },
-  { key: 'urgent', label: '░█ Delegate', sublabel: 'Urgent, not important', color: 'text-orange', line: 'bg-orange-dim' },
-  { key: 'neither', label: '░░ Drop', sublabel: 'Neither', color: 'text-text-tertiary', line: 'bg-border-subtle' },
+  { key: 'urgent-important', label: '🔴 Do Now', sublabel: 'Urgent + Important', color: 'text-red', line: 'bg-red-dim' },
+  { key: 'important', label: '🔵 Schedule', sublabel: 'Important, not urgent', color: 'text-blue', line: 'bg-blue-dim' },
+  { key: 'urgent', label: '🟠 Delegate', sublabel: 'Urgent, not important', color: 'text-orange', line: 'bg-orange-dim' },
+  { key: 'neither', label: '⚪ Drop', sublabel: 'Neither', color: 'text-text-tertiary', line: 'bg-border-subtle' },
   { key: null, label: '○ Untagged', sublabel: '', color: 'text-text-tertiary', line: 'bg-border-subtle' },
 ];
 

@@ -20,6 +20,7 @@ import { api } from '@/lib/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { SwipeToDelete } from './SwipeToDelete';
 import { Conversation } from './Conversation';
+import { MetaBar } from './MetaBar';
 import type { Task, TeamMember, Subtask } from '@/types';
 
 function SortableSubtaskRow({
@@ -169,133 +170,10 @@ export function TaskDetail({ task, members, onUpdate }: TaskDetailProps) {
   };
 
   return (
-    <div className="mt-3 pt-3 border-t border-border w-full" onClick={(e) => e.stopPropagation()}>
+    <div className="w-full" onClick={(e) => e.stopPropagation()}>
 
-      {/* Pipeline section */}
-      <div className="flex items-center gap-1.5 mb-3 flex-wrap">
-        <span className="font-mono text-[10px] uppercase tracking-wider text-text-tertiary">Section:</span>
-        {(['waiting', 'active', 'queued', 'someday'] as const).map((section) => {
-          const labels: Record<string, string> = { waiting: 'Waiting', active: 'Active', queued: 'Queued', someday: 'Someday' };
-          return (
-            <button
-              key={section}
-              onClick={() => onUpdate(task._id, { pipelineSection: section } as any)}
-              className={`font-mono text-[11px] md:text-[10px] px-2 py-[3px] md:py-[2px] rounded transition-all ${
-                task.pipelineSection === section
-                  ? section === 'waiting' ? 'text-blue bg-blue-dim border border-blue'
-                    : section === 'someday' ? 'text-text-tertiary bg-bg-active border border-text-tertiary'
-                    : 'text-accent bg-accent-dim border border-accent'
-                  : 'text-text-tertiary bg-bg-active border border-transparent hover:text-text-secondary'
-              }`}
-            >
-              {labels[section]}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Energy tag */}
-      <div className="flex items-center gap-1.5 mb-3 flex-wrap">
-        <span className="font-mono text-[10px] uppercase tracking-wider text-text-tertiary">Energy:</span>
-        {([
-          { key: 'quick', label: '⚡ Quick', color: 'text-accent' },
-          { key: 'deep', label: '🧩 Deep', color: 'text-blue' },
-          { key: 'people', label: '📞 People', color: 'text-green' },
-          { key: 'hands-on', label: '🔧 Hands-on', color: 'text-orange' },
-        ] as const).map(({ key, label, color }) => (
-          <button
-            key={key}
-            onClick={() => onUpdate(task._id, { energy: task.energy === key ? null : key } as any)}
-            className={`font-mono text-[11px] md:text-[10px] px-2 py-[3px] md:py-[2px] rounded transition-all ${
-              task.energy === key
-                ? `${color} bg-bg-active border border-current`
-                : 'text-text-tertiary bg-bg-active border border-transparent hover:text-text-secondary'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {/* Importance */}
-      <div className="flex items-center gap-1.5 mb-3 flex-wrap">
-        <span className="font-mono text-[10px] uppercase tracking-wider text-text-tertiary">Priority:</span>
-        {([
-          { key: 'urgent-important', label: '██', desc: 'Do now' },
-          { key: 'important', label: '█░', desc: 'Schedule' },
-          { key: 'urgent', label: '░█', desc: 'Delegate' },
-          { key: 'neither', label: '░░', desc: 'Drop' },
-        ] as const).map(({ key, label, desc }) => (
-          <button
-            key={key}
-            onClick={() => onUpdate(task._id, { importance: task.importance === key ? null : key } as any)}
-            className={`font-mono text-[11px] md:text-[10px] px-2 py-[3px] md:py-[2px] rounded transition-all ${
-              task.importance === key
-                ? key === 'urgent-important' ? 'text-red bg-red-dim border border-red'
-                  : key === 'important' ? 'text-blue bg-blue-dim border border-blue'
-                  : key === 'urgent' ? 'text-orange bg-orange-dim border border-orange'
-                  : 'text-text-tertiary bg-bg-active border border-text-tertiary'
-                : 'text-text-tertiary bg-bg-active border border-transparent hover:text-text-secondary'
-            }`}
-            title={desc}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {/* Meta chips */}
-      <div className="flex items-center gap-3 mb-3 flex-wrap">
-        <div className="flex items-center gap-1.5">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-text-tertiary">Due:</span>
-          <input
-            type="date"
-            value={task.dueDate ? task.dueDate.split('T')[0] : ''}
-            onChange={(e) => {
-              const val = e.target.value;
-              onUpdate(task._id, { dueDate: val ? val + 'T12:00:00.000Z' : null } as any);
-            }}
-            className="bg-bg-active border-none rounded px-2 py-[3px] font-mono text-[11px] text-text-secondary outline-none [color-scheme:dark]"
-          />
-          {task.dueDate && (
-            <button
-              onClick={() => onUpdate(task._id, { dueDate: null } as any)}
-              className="font-mono text-[10px] text-text-tertiary hover:text-red transition-colors"
-            >
-              &#10005;
-            </button>
-          )}
-        </div>
-
-      </div>
-
-      {/* Assignees */}
-      {members && members.length > 0 && (
-        <div className="flex items-center gap-2 mb-3 flex-wrap">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-text-tertiary">Assign:</span>
-          {members.map((m) => {
-            const isAssigned = task.assignees.includes(m.userId);
-            return (
-              <button
-                key={m.userId}
-                onClick={() => {
-                  const newAssignees = isAssigned
-                    ? task.assignees.filter((id) => id !== m.userId)
-                    : [...task.assignees, m.userId];
-                  onUpdate(task._id, { assignees: newAssignees } as any);
-                }}
-                className={`font-mono text-[11px] px-2 py-[2px] rounded transition-all ${
-                  isAssigned
-                    ? 'text-blue bg-blue-dim border border-blue'
-                    : 'text-text-tertiary bg-bg-active border border-transparent hover:text-text-secondary'
-                }`}
-              >
-                @{m.username}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      {/* Compact meta bar */}
+      <MetaBar task={task} members={members} onUpdate={onUpdate} />
 
       {/* Notes */}
       {notesEditing ? (
