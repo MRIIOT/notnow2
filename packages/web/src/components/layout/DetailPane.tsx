@@ -17,6 +17,8 @@ export function DetailPane() {
   const teamId = useAuthStore((s) => s.activeTeamId);
   const { team } = useTeam();
   const qc = useQueryClient();
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState('');
 
   const { data: task } = useQuery({
     queryKey: ['task', teamId, selectedTaskId],
@@ -101,9 +103,6 @@ export function DetailPane() {
       </div>
     );
   }
-
-  const [editingTitle, setEditingTitle] = useState(false);
-  const [titleDraft, setTitleDraft] = useState('');
 
   const saveTitle = () => {
     const trimmed = titleDraft.trim();
