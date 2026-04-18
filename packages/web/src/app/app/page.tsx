@@ -165,7 +165,7 @@ export default function PipelinePage() {
                   <SortableContext items={sectionTasks.map((t) => t._id)} strategy={verticalListSortingStrategy}>
                     {sectionTasks.map((t) => (
                       <SortableTaskRow key={t._id} task={t} rank={showRank ? rank++ : undefined}
-                        showGroup groups={groups} members={team?.members} messageCount={msgCounts[t._id]}
+                        showGroup groups={groups} members={team?.members} messageCount={msgCounts.counts[t._id]} hasUnread={msgCounts.unread[t._id]}
                         onComplete={handleComplete} onDelete={handleDelete} onUpdate={handleUpdate}
                       />
                     ))}
@@ -186,13 +186,13 @@ export default function PipelinePage() {
             </DragOverlay>
           </DndContext>
         ) : activeTab === 'energy' ? (
-          <EnergyView tasks={tasks} groups={groups} members={team?.members} messageCounts={msgCounts}
+          <EnergyView tasks={tasks} groups={groups} members={team?.members} messageCounts={msgCounts.counts} unreadMap={msgCounts.unread}
             onComplete={handleComplete} onDelete={handleDelete} onUpdate={handleUpdate} />
         ) : activeTab === 'priority' ? (
-          <PriorityView tasks={tasks} groups={groups} members={team?.members} messageCounts={msgCounts}
+          <PriorityView tasks={tasks} groups={groups} members={team?.members} messageCounts={msgCounts.counts} unreadMap={msgCounts.unread}
             onComplete={handleComplete} onDelete={handleDelete} onUpdate={handleUpdate} />
         ) : (
-          <KanbanView tasks={tasks} groups={groups} members={team?.members} messageCounts={msgCounts}
+          <KanbanView tasks={tasks} groups={groups} members={team?.members} messageCounts={msgCounts.counts} unreadMap={msgCounts.unread}
             onComplete={handleComplete} onDelete={handleDelete} onUpdate={handleUpdate} />
         )}
       </div>

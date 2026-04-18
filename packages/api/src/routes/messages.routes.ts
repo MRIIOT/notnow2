@@ -1,5 +1,7 @@
 import { Router, type Request, type Response, type NextFunction } from 'express';
+import mongoose from 'mongoose';
 import { TaskMessage } from '../models/TaskMessage.js';
+import { MessageReadStatus } from '../models/MessageReadStatus.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { authorize } from '../middleware/authorize.js';
 import { Errors } from '../utils/errors.js';
@@ -76,21 +78,49 @@ router.delete('/:messageId', authenticate, authorize(), async (req: Request, res
   }
 });
 
-// Standalone route for batch message counts (mounted separately)
+// POST /teams/:teamId/tasks/:taskId/messages/mark-read
+router.post('/mark-read', authenticate, authorize(), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await MessageReadStatus.findOneAndUpdate(
+      { userId: req.user!.userId, taskId: req.params.taskId },
+      { lastReadAt: new Date() },
+      { upsert: true },
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Standalone route for batch message counts + unread (mounted separately)
 export const messageCountsRouter = Router({ mergeParams: true });
 
 // GET /teams/:teamId/message-counts
 messageCountsRouter.get('/', authenticate, authorize(), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const counts = await TaskMessage.aggregate([
-      { $match: { teamId: new (await import('mongoose')).default.Types.ObjectId(req.params.teamId as string) } },
-      { $group: { _id: '$taskId', count: { $sum: 1 } } },
+    const teamOid = new mongoose.Types.ObjectId(req.params.teamId as string);
+
+    // Get total counts and latest message time per task
+    const agg = await TaskMessage.aggregate([
+      { $match: { teamId: teamOid } },
+      { $group: { _id: '$taskId', count: { $sum: 1 }, latestAt: { $max: '$createdAt' } } },
     ]);
-    const map: Record<string, number> = {};
-    for (const c of counts) {
-      map[c._id.toString()] = c.count;
+
+    // Get read statuses for this user
+    const readStatuses = await MessageReadStatus.find({ userId: req.user!.userId });
+    const readMap = new Map(readStatuses.map((r) => [r.taskId.toString(), r.lastReadAt]));
+
+    const counts: Record<string, number> = {};
+    const unread: Record<string, boolean> = {};
+
+    for (const item of agg) {
+      const taskId = item._id.toString();
+      counts[taskId] = item.count;
+      const lastRead = readMap.get(taskId);
+      unread[taskId] = !lastRead || item.latestAt > lastRead;
     }
-    res.json({ counts: map });
+
+    res.json({ counts, unread });
   } catch (err) {
     next(err);
   }

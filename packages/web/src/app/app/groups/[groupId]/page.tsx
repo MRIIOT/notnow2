@@ -26,6 +26,7 @@ import { TaskRow } from '@/components/tasks/TaskRow';
 import { SwipeToDelete } from '@/components/tasks/SwipeToDelete';
 import { TaskInput } from '@/components/tasks/TaskInput';
 import { TaskSkeleton } from '@/components/tasks/TaskSkeleton';
+import { useMessageCounts } from '@/hooks/useMessageCounts';
 import { generateKeyBetween } from '@/lib/ordering';
 import type { Task } from '@/types';
 
@@ -33,6 +34,7 @@ export default function GroupPage({ params }: { params: Promise<{ groupId: strin
   const { groupId } = use(params);
   const { tasks, isLoading, createTask, updateTask, deleteTask, reorderTask } = useTasks('group', groupId);
   const { groups, renameGroup } = useGroups();
+  const msgCounts = useMessageCounts();
   const { team } = useTeam();
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
@@ -137,8 +139,8 @@ export default function GroupPage({ params }: { params: Promise<{ groupId: strin
                   key={t._id}
                   task={t}
                   members={team?.members}
+                  messageCount={msgCounts.counts[t._id]} hasUnread={msgCounts.unread[t._id]}
                   onComplete={handleComplete}
-
                   onDelete={handleDelete}
                   onUpdate={handleUpdate}
                 />
@@ -172,6 +174,7 @@ export default function GroupPage({ params }: { params: Promise<{ groupId: strin
                   <TaskRow
                     task={t}
                     members={team?.members}
+                    messageCount={msgCounts.counts[t._id]} hasUnread={msgCounts.unread[t._id]}
                     onComplete={handleComplete}
                     onDelete={handleDelete}
                     onUpdate={handleUpdate}

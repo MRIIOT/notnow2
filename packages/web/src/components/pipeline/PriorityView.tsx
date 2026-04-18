@@ -26,12 +26,13 @@ interface Props {
   groups: Group[];
   members?: TeamMember[];
   messageCounts?: Record<string, number>;
+  unreadMap?: Record<string, boolean>;
   onComplete: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdate: (id: string, data: Partial<Task>) => void;
 }
 
-export function PriorityView({ tasks, groups, members, messageCounts, onComplete, onDelete, onUpdate }: Props) {
+export function PriorityView({ tasks, groups, members, messageCounts, unreadMap, onComplete, onDelete, onUpdate }: Props) {
   const active = tasks.filter((t) => t.status === 'active');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overSection, setOverSection] = useState<string | null>(null);
@@ -117,7 +118,7 @@ export function PriorityView({ tasks, groups, members, messageCounts, onComplete
           >
             <SortableContext items={sectionTasks.map((t) => t._id)} strategy={verticalListSortingStrategy}>
               {sectionTasks.map((t) => (
-                <SortableTaskRow key={t._id} task={t} showGroup groups={groups} members={members} messageCount={messageCounts?.[t._id]}
+                <SortableTaskRow key={t._id} task={t} showGroup groups={groups} members={members} messageCount={messageCounts?.[t._id]} hasUnread={unreadMap?.[t._id]}
                   onComplete={onComplete} onDelete={onDelete} onUpdate={onUpdate} />
               ))}
             </SortableContext>

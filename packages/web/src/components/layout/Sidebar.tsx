@@ -20,6 +20,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useGroups } from '@/hooks/useGroups';
 import { useTaskCounts } from '@/hooks/useTaskCounts';
+import { useMessageCounts } from '@/hooks/useMessageCounts';
 import { useTeam } from '@/hooks/useTeam';
 import { useAuthStore } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
@@ -78,6 +79,7 @@ export function Sidebar() {
   const setSidebarOpen = useUIStore((s) => s.setSidebarOpen);
   const { groups, createGroup, reorderGroups, deleteGroup } = useGroups();
   const taskCounts = useTaskCounts();
+  const { unreadCount } = useMessageCounts();
   const { team } = useTeam();
   const currentUserId = useAuthStore((s) => s.user?.id);
   const currentRole = team?.members.find((m) => m.userId === currentUserId)?.role;
@@ -163,6 +165,24 @@ export function Sidebar() {
         >
           <span className="font-mono text-[13px] w-4 text-center">&#9776;</span>
           Upcoming
+        </button>
+        <button
+          onClick={() => nav('/app/unread')}
+          className={`w-full flex items-center justify-between px-2 py-1.5 rounded text-[13px] transition-all ${
+            isActive('/app/unread')
+              ? 'bg-accent-dim text-accent'
+              : 'text-text-secondary hover:bg-bg-hover hover:text-text'
+          }`}
+        >
+          <span className="flex items-center gap-2">
+            <span className="font-mono text-[13px] w-4 text-center">&#128172;</span>
+            Unread
+          </span>
+          {unreadCount > 0 && (
+            <span className="font-mono text-[10px] text-accent bg-accent-dim rounded-full px-1.5 py-[1px]">
+              {unreadCount}
+            </span>
+          )}
         </button>
         <button
           onClick={() => nav('/app/settings')}

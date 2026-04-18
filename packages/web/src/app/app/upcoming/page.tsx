@@ -7,6 +7,7 @@ import { useGroups } from '@/hooks/useGroups';
 import { useTeam } from '@/hooks/useTeam';
 import { TaskRow } from '@/components/tasks/TaskRow';
 import { SwipeToDelete } from '@/components/tasks/SwipeToDelete';
+import { useMessageCounts } from '@/hooks/useMessageCounts';
 import type { Task } from '@/types';
 
 function getWeekBucket(dateStr: string | null): string {
@@ -33,6 +34,7 @@ export default function UpcomingPage() {
   const { tasks, updateTask, deleteTask } = useTasks('upcoming');
   const { groups } = useGroups();
   const { team } = useTeam();
+  const msgCounts = useMessageCounts();
 
   const activeTasks = tasks.filter((t) => t.status === 'active');
 
@@ -90,6 +92,7 @@ export default function UpcomingPage() {
                     showGroup
                     groups={groups}
                     members={team?.members}
+                    messageCount={msgCounts.counts[t._id]} hasUnread={msgCounts.unread[t._id]}
                     onComplete={handleComplete}
                     onDelete={handleDelete}
                     onUpdate={handleUpdate}

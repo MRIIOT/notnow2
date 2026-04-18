@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useUIStore } from '@/stores/uiStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useTeam } from '@/hooks/useTeam';
@@ -19,6 +19,15 @@ export function DetailPane() {
   const qc = useQueryClient();
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
+
+  // Mark messages as read when task is selected
+  useEffect(() => {
+    if (selectedTaskId && teamId) {
+      api(`/teams/${teamId}/tasks/${selectedTaskId}/messages/mark-read`, { method: 'POST' })
+        .then(() => qc.invalidateQueries({ queryKey: ['message-counts', teamId] }))
+        .catch(() => {});
+    }
+  }, [selectedTaskId, teamId, qc]);
 
   const { data: task } = useQuery({
     queryKey: ['task', teamId, selectedTaskId],

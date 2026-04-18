@@ -12,13 +12,14 @@ interface TaskRowProps {
   groups?: Group[];
   members?: TeamMember[];
   messageCount?: number;
+  hasUnread?: boolean;
   dragListeners?: SyntheticListenerMap;
   onComplete: (taskId: string) => void;
   onDelete: (taskId: string) => void;
   onUpdate: (taskId: string, data: Partial<Task>) => void;
 }
 
-export function TaskRow({ task, rank, showGroup, groups, members, messageCount, dragListeners, onComplete, onDelete, onUpdate }: TaskRowProps) {
+export function TaskRow({ task, rank, showGroup, groups, members, messageCount, hasUnread, dragListeners, onComplete, onDelete, onUpdate }: TaskRowProps) {
   const selectedTaskId = useUIStore((s) => s.selectedTaskId);
   const selectTask = useUIStore((s) => s.selectTask);
 
@@ -108,7 +109,9 @@ export function TaskRow({ task, rank, showGroup, groups, members, messageCount, 
         </span>
       )}
       {messageCount !== undefined && messageCount > 0 && (
-        <span className="font-mono text-[9px] shrink-0 text-text-tertiary border border-border rounded-full w-[22px] h-[16px] flex items-center justify-center" title={`${messageCount} messages`}>
+        <span className={`font-mono text-[9px] shrink-0 border rounded-full px-1.5 h-[16px] flex items-center justify-center ${
+          hasUnread ? 'text-accent border-accent bg-accent-dim' : 'text-text-tertiary border-border'
+        }`} title={`${messageCount} messages${hasUnread ? ' (unread)' : ''}`}>
           &#128172;{messageCount}
         </span>
       )}
