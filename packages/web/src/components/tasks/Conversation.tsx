@@ -62,7 +62,7 @@ export function Conversation({ taskId, members }: ConversationProps) {
     queryFn: () =>
       api<{ messages: Message[] }>(`/teams/${teamId}/tasks/${taskId}/messages`).then((d) => d.messages),
     enabled: !!teamId && !!taskId,
-    refetchInterval: 30000,
+    refetchInterval: 60000,
     refetchOnWindowFocus: true,
   });
 
