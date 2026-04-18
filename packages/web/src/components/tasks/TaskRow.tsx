@@ -81,6 +81,23 @@ export function TaskRow({ task, rank, showGroup, groups, members, messageCount, 
       <span className="font-mono text-[9px] text-text-tertiary opacity-40 shrink-0">
         #{task._id.slice(-6)}
       </span>
+      {!showGroup && !isCompleted && (
+        <div className="hidden md:flex items-center gap-1 shrink-0">
+          <span className="font-mono text-[9px] text-text-tertiary opacity-60">
+            {task.pipelineSection === 'active' ? 'Active' : task.pipelineSection === 'queued' ? 'Queued' : task.pipelineSection === 'waiting' ? 'Wait' : 'Someday'}
+          </span>
+          {task.energy && (
+            <span className="text-[9px]">
+              {task.energy === 'quick' ? '⚡' : task.energy === 'deep' ? '🧩' : task.energy === 'people' ? '📞' : '🔧'}
+            </span>
+          )}
+          {task.importance && (
+            <span className="text-[9px]">
+              {task.importance === 'urgent-important' ? '🔴' : task.importance === 'important' ? '🔵' : task.importance === 'urgent' ? '🟠' : '⚪'}
+            </span>
+          )}
+        </div>
+      )}
       {task.subtasks.length > 0 && (
         <span className={`font-mono text-[9px] shrink-0 border rounded-full w-[30px] h-[16px] flex items-center justify-center ${
           task.subtasks.every((s) => s.completed)
