@@ -32,8 +32,10 @@ import type { Task } from '@/types';
 export default function GroupPage({ params }: { params: Promise<{ groupId: string }> }) {
   const { groupId } = use(params);
   const { tasks, isLoading, createTask, updateTask, deleteTask, reorderTask } = useTasks('group', groupId);
-  const { groups } = useGroups();
+  const { groups, renameGroup } = useGroups();
   const { team } = useTeam();
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState('');
   const setActiveView = useUIStore((s) => s.setActiveView);
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -89,7 +91,32 @@ export default function GroupPage({ params }: { params: Promise<{ groupId: strin
   return (
     <>
       <div className="px-7 pt-5 pb-4 border-b border-border-subtle shrink-0">
-        <h1 className="font-mono text-[18px] font-semibold tracking-tight">{group?.name || 'Group'}</h1>
+        {editingName ? (
+          <input
+            autoFocus
+            value={nameDraft}
+            onChange={(e) => setNameDraft(e.target.value)}
+            onBlur={() => {
+              const trimmed = nameDraft.trim();
+              if (trimmed && trimmed !== group?.name) {
+                renameGroup.mutate({ groupId, name: trimmed });
+              }
+              setEditingName(false);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+              if (e.key === 'Escape') setEditingName(false);
+            }}
+            className="font-mono text-[18px] font-semibold tracking-tight bg-transparent border-b border-accent outline-none text-text w-full"
+          />
+        ) : (
+          <h1
+            className="font-mono text-[18px] font-semibold tracking-tight cursor-text hover:text-accent transition-colors"
+            onClick={() => { setNameDraft(group?.name || ''); setEditingName(true); }}
+          >
+            {group?.name || 'Group'}
+          </h1>
+        )}
       </div>
       <div className="flex-1 overflow-y-auto px-7 py-2 pb-10">
         <TaskInput onSubmit={handleAddTask} />

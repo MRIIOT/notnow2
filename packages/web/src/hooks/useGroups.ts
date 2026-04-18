@@ -48,11 +48,20 @@ export function useGroups() {
     onSettled: () => qc.invalidateQueries({ queryKey }),
   });
 
+  const renameGroup = useMutation({
+    mutationFn: ({ groupId, name }: { groupId: string; name: string }) =>
+      api(`/teams/${teamId}/groups/${groupId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ name }),
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey }),
+  });
+
   const deleteGroup = useMutation({
     mutationFn: (groupId: string) =>
       api(`/teams/${teamId}/groups/${groupId}`, { method: 'DELETE' }),
     onSuccess: () => qc.invalidateQueries({ queryKey }),
   });
 
-  return { groups: query.data || [], isLoading: query.isLoading, createGroup, reorderGroups, deleteGroup };
+  return { groups: query.data || [], isLoading: query.isLoading, createGroup, reorderGroups, renameGroup, deleteGroup };
 }
