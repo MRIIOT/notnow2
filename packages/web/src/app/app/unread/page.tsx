@@ -19,19 +19,19 @@ export default function UnreadPage() {
   const { team } = useTeam();
   const msgCounts = useMessageCounts();
 
-  // Snapshot unread task IDs on first load
-  const snapshotRef = useRef<Set<string> | null>(null);
-  if (snapshotRef.current === null && Object.keys(msgCounts.unread).length > 0) {
-    snapshotRef.current = new Set(
-      Object.entries(msgCounts.unread).filter(([, v]) => v).map(([k]) => k)
-    );
+  // Track all task IDs that have been unread while on this page
+  // Grows as new unread tasks appear, never shrinks until remount
+  const snapshotRef = useRef<Set<string>>(new Set());
+
+  // Add any currently unread tasks to the snapshot
+  for (const [taskId, isUnread] of Object.entries(msgCounts.unread)) {
+    if (isUnread) snapshotRef.current.add(taskId);
   }
 
   const activeTasks = tasks.filter((t) => t.status === 'active');
-  const snapshot = snapshotRef.current || new Set<string>();
 
-  // Show all tasks that were unread when we mounted this view
-  const visibleTasks = activeTasks.filter((t) => snapshot.has(t._id));
+  // Show all tasks that have been unread at any point during this visit
+  const visibleTasks = activeTasks.filter((t) => snapshotRef.current.has(t._id));
   const stillUnread = visibleTasks.filter((t) => msgCounts.unread[t._id]).length;
 
   const handleComplete = (taskId: string) => {};
