@@ -49,6 +49,13 @@ router.post('/', authenticate, authorize(), async (req: Request, res: Response, 
       body: body.trim(),
     });
 
+    // Mark as read for the sender so their own message doesn't show as unread
+    await MessageReadStatus.findOneAndUpdate(
+      { userId: req.user!.userId, taskId: req.params.taskId },
+      { lastReadAt: new Date() },
+      { upsert: true },
+    );
+
     const populated = await TaskMessage.findById(message._id).populate('userId', 'username displayName');
     res.status(201).json({ message: populated });
   } catch (err) {
