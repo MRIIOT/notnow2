@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useUIStore } from '@/stores/uiStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useTeam } from '@/hooks/useTeam';
@@ -102,12 +102,39 @@ export function DetailPane() {
     );
   }
 
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState('');
+
+  const saveTitle = () => {
+    const trimmed = titleDraft.trim();
+    if (trimmed && trimmed !== task?.title) {
+      handleUpdate(task!._id, { title: trimmed });
+    }
+    setEditingTitle(false);
+  };
+
   const content = !task ? (
     <p className="text-text-tertiary text-[12px] font-mono p-4">Loading...</p>
   ) : (
     <>
       <div className="px-4 pt-4 pb-3 border-b border-border-subtle flex items-start justify-between gap-2">
-        <h2 className="text-[15px] md:text-[14px] text-text font-medium leading-snug flex-1">{task.title}</h2>
+        {editingTitle ? (
+          <input
+            autoFocus
+            value={titleDraft}
+            onChange={(e) => setTitleDraft(e.target.value)}
+            onBlur={saveTitle}
+            onKeyDown={(e) => { if (e.key === 'Enter') saveTitle(); if (e.key === 'Escape') setEditingTitle(false); }}
+            className="flex-1 text-[15px] md:text-[14px] text-text font-medium bg-transparent border-b border-accent outline-none py-0"
+          />
+        ) : (
+          <h2
+            className="text-[15px] md:text-[14px] text-text font-medium leading-snug flex-1 cursor-text hover:text-accent transition-colors"
+            onClick={() => { setTitleDraft(task.title); setEditingTitle(true); }}
+          >
+            {task.title}
+          </h2>
+        )}
         <div className="flex items-center gap-1">
           <button
             onClick={() => handleMove('up')}
