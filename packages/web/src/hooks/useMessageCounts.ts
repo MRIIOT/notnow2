@@ -16,9 +16,9 @@ export function useMessageCounts() {
     queryKey: ['message-counts', teamId],
     queryFn: () => api<MessageCountsData>(`/teams/${teamId}/message-counts`),
     enabled: !!teamId,
-    staleTime: 30_000,
+    staleTime: 0,
     refetchInterval: 60_000,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: 'always',
   });
 
   return {
