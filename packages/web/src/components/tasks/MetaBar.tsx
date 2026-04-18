@@ -4,10 +4,10 @@ import { useState, useRef, useEffect } from 'react';
 import type { Task, TeamMember } from '@/types';
 
 const SECTIONS = [
-  { key: 'waiting', label: 'Waiting' },
-  { key: 'active', label: 'Active' },
-  { key: 'queued', label: 'Queued' },
-  { key: 'someday', label: 'Someday' },
+  { key: 'waiting', icon: '⏸', label: 'Waiting' },
+  { key: 'active', icon: '▶', label: 'Active' },
+  { key: 'queued', icon: '⏭', label: 'Queued' },
+  { key: 'someday', icon: '💤', label: 'Someday' },
 ] as const;
 
 const ENERGIES = [
@@ -66,7 +66,7 @@ function PopoverItem({ active, onClick, children }: { active?: boolean; onClick:
 export function MetaBar({ task, members, onUpdate }: MetaBarProps) {
   const [open, setOpen] = useState<PopoverType>(null);
 
-  const sectionLabel = SECTIONS.find((s) => s.key === task.pipelineSection)?.label || 'Active';
+  const sectionItem = SECTIONS.find((s) => s.key === task.pipelineSection) || SECTIONS[1];
   const energyItem = ENERGIES.find((e) => e.key === task.energy);
   const priorityItem = PRIORITIES.find((p) => p.key === task.importance);
   const assignedMembers = members?.filter((m) => task.assignees.includes(m.userId)) || [];
@@ -84,13 +84,13 @@ export function MetaBar({ task, members, onUpdate }: MetaBarProps) {
         {/* Section */}
         <div className="relative">
           <button onClick={() => toggle('section')} className="font-mono text-[11px] text-text-secondary hover:text-text px-1.5 py-[2px] rounded hover:bg-bg-hover transition-all">
-            {sectionLabel}
+            {sectionItem.icon} {sectionItem.label}
           </button>
           {open === 'section' && (
             <Popover onClose={() => setOpen(null)}>
               {SECTIONS.map((s) => (
                 <PopoverItem key={s.key} active={task.pipelineSection === s.key} onClick={() => { onUpdate(task._id, { pipelineSection: s.key } as any); setOpen(null); }}>
-                  {s.label}
+                  {s.icon} {s.label}
                 </PopoverItem>
               ))}
             </Popover>
@@ -125,7 +125,7 @@ export function MetaBar({ task, members, onUpdate }: MetaBarProps) {
         {/* Priority */}
         <div className="relative">
           <button onClick={() => toggle('priority')} className={`font-mono text-[11px] px-1.5 py-[2px] rounded hover:bg-bg-hover transition-all ${priorityItem ? 'text-text-secondary' : 'text-text-tertiary'}`}>
-            {priorityItem ? `${priorityItem.icon}` : '+priority'}
+            {priorityItem ? `${priorityItem.icon} ${priorityItem.label}` : '+priority'}
           </button>
           {open === 'priority' && (
             <Popover onClose={() => setOpen(null)}>

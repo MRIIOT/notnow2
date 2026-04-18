@@ -43,10 +43,10 @@ const TABS: { key: PipelineTab; label: string }[] = [
 
 const SECTION_ORDER: Section[] = ['waiting', 'active', 'queued', 'someday'];
 const SECTION_CONFIG: Record<Section, { label: string; color: string; lineColor: string }> = {
-  waiting: { label: 'Waiting', color: 'text-blue', lineColor: 'bg-blue-dim' },
-  active: { label: 'Active', color: 'text-accent', lineColor: 'bg-accent-dim' },
-  queued: { label: 'Queued', color: 'text-text-secondary', lineColor: 'bg-border' },
-  someday: { label: 'Someday', color: 'text-text-tertiary', lineColor: 'bg-border-subtle' },
+  waiting: { label: '⏸ Waiting', color: 'text-blue', lineColor: 'bg-blue-dim' },
+  active: { label: '▶ Active', color: 'text-accent', lineColor: 'bg-accent-dim' },
+  queued: { label: '⏭ Queued', color: 'text-text-secondary', lineColor: 'bg-border' },
+  someday: { label: '💤 Someday', color: 'text-text-tertiary', lineColor: 'bg-border-subtle' },
 };
 
 

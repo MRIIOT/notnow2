@@ -83,8 +83,8 @@ export function TaskRow({ task, rank, showGroup, groups, members, messageCount, 
       </span>
       {!showGroup && !isCompleted && (
         <div className="hidden md:flex items-center gap-1 shrink-0">
-          <span className="font-mono text-[9px] text-text-tertiary opacity-60">
-            {task.pipelineSection === 'active' ? 'Active' : task.pipelineSection === 'queued' ? 'Queued' : task.pipelineSection === 'waiting' ? 'Wait' : 'Someday'}
+          <span className="text-[9px] opacity-60">
+            {task.pipelineSection === 'active' ? '▶' : task.pipelineSection === 'queued' ? '⏭' : task.pipelineSection === 'waiting' ? '⏸' : '💤'}
           </span>
           {task.energy && (
             <span className="text-[9px]">
